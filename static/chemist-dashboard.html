@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemist Dashboard — InstaRX</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="page-header">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1 id="shop-name">Chemist Dashboard</h1>
+      <div style="font-size:13px;color:var(--text-muted);" id="shop-address"></div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="online-toggle">
+      <span class="track"></span>
+      <span id="online-label" style="font-weight:700;font-size:13.5px;">Offline</span>
+    </label>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="split-grid">
+      <div>
+        <div class="section-title"><h2>Incoming Order Requests</h2></div>
+        <div id="incoming-orders"></div>
+      </div>
+      <div>
+        <div class="section-title"><h2>My Active &amp; Past Orders</h2></div>
+        <div id="my-orders"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="/js/common.js"></script>
+<script src="/js/chemist.js"></script>
+</body>
+</html>

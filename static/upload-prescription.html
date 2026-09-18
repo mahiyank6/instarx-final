@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Prescription — InstaRX</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="auth-shell">
+  <div class="auth-card" style="max-width:480px;">
+    <h2>Upload Prescription</h2>
+    <p style="color:var(--text-muted);font-size:13.5px;margin-top:-8px;">A nearby chemist will review it, confirm items and price, then accept your order.</p>
+    <div id="upload-error" class="form-error" style="display:none;"></div>
+    <div id="upload-success" class="form-note" style="display:none;"></div>
+    <div class="field">
+      <label>Prescription file (image or PDF)</label>
+      <input type="file" id="rx-file" accept="image/*,.pdf">
+    </div>
+    <button class="btn btn-primary btn-block" id="upload-btn">Upload &amp; Continue to Cart</button>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="/js/common.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  renderHeader();
+  document.getElementById("upload-btn").addEventListener("click", async () => {
+    const errorEl = document.getElementById("upload-error");
+    const successEl = document.getElementById("upload-success");
+    errorEl.style.display = "none";
+    successEl.style.display = "none";
+    const me = await api("/api/me").catch(() => ({ user: null }));
+    if (!me.user) {
+      errorEl.textContent = "Please login first to upload a prescription.";
+      errorEl.style.display = "block";
+      return;
+    }
+    const fileInput = document.getElementById("rx-file");
+    if (!fileInput.files.length) {
+      errorEl.textContent = "Please choose a file first.";
+      errorEl.style.display = "block";
+      return;
+    }
+    const fd = new FormData();
+    fd.append("file", fileInput.files[0]);
+    try {
+      const res = await fetch("/api/upload-prescription", { method: "POST", body: fd, credentials: "same-origin" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Upload failed");
+      localStorage.setItem("instarx_pending_prescription", body.filename);
+      successEl.textContent = "Uploaded! Redirecting to your cart...";
+      successEl.style.display = "block";
+      setTimeout(() => (window.location.href = "/cart.html"), 900);
+    } catch (e) {
+      errorEl.textContent = e.message;
+      errorEl.style.display = "block";
+    }
+  });
+});
+</script>
+</body>
+</html>

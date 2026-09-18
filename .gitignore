@@ -1,0 +1,14 @@
+# unrelated local projects living in this same folder — not part of InstaRX
+SmartGroceryPlanner/
+pptx-work/
+
+# tool-local config
+.claude/
+
+# python
+__pycache__/
+*.pyc
+
+# uploaded prescription files (user content, not app code)
+server/uploads/*
+!server/uploads/.gitkeep

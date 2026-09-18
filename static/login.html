@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login / Signup — InstaRX</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="role-toggle" id="mode-toggle">
+      <button type="button" data-mode="login" class="active">Login</button>
+      <button type="button" data-mode="signup">Sign Up</button>
+    </div>
+
+    <div id="role-toggle-wrap" class="role-toggle" style="display:none;">
+      <button type="button" data-role="customer" class="active">I'm a Customer</button>
+      <button type="button" data-role="chemist">I'm a Chemist</button>
+    </div>
+
+    <h2 id="form-title">Welcome back</h2>
+    <div id="form-error" class="form-error" style="display:none;"></div>
+
+    <form id="auth-form">
+      <div class="field signup-only" style="display:none;">
+        <label>Full Name / Shop Owner Name</label>
+        <input type="text" name="name" placeholder="e.g. Rohit Kumar">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="you@example.com">
+      </div>
+      <div class="field signup-only" style="display:none;">
+        <label>Phone</label>
+        <input type="tel" name="phone" placeholder="10-digit mobile number">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" required minlength="4" placeholder="At least 4 characters">
+      </div>
+
+      <div id="chemist-fields" style="display:none;">
+        <div class="form-note">Chemist accounts need shop details — orders from nearby customers will be routed to you once you're online.</div>
+        <div class="field">
+          <label>Shop Name</label>
+          <input type="text" name="shop_name" placeholder="e.g. Priya's Medical Store">
+        </div>
+        <div class="field">
+          <label>Drug License Number</label>
+          <input type="text" name="license_no" placeholder="e.g. MH-PH-1234">
+        </div>
+        <div class="field">
+          <label>Shop Address</label>
+          <input type="text" name="address" placeholder="Street, area, city">
+        </div>
+        <div class="field">
+          <button type="button" id="use-location-btn" class="btn btn-outline btn-sm">📍 Use My Current Location</button>
+          <div id="location-status" style="font-size:12.5px;color:var(--text-muted);margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Login</button>
+    </form>
+
+    <div class="switch-link">
+      <span id="switch-text">New to InstaRX? <a href="#" id="switch-link">Create an account</a></span>
+    </div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="/js/common.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>

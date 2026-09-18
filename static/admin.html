@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Server Data — InstaRX Admin</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .admin-shell { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
+  .admin-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  .admin-top h1 { margin: 0 0 4px; font-size: 24px; }
+  .admin-sub { color: var(--text-muted); font-size: 13px; }
+  .admin-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 18px 0 26px; }
+  .stat-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 20px; min-width: 130px; }
+  .stat-card .num { font-size: 26px; font-weight: 800; color: var(--primary-dark); }
+  .stat-card .lbl { font-size: 12px; color: var(--text-muted); }
+  .admin-table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 30px; }
+  table.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.admin-table th { text-align: left; background: var(--primary); color: #fff; padding: 10px 14px; white-space: nowrap; font-weight: 700; }
+  table.admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.admin-table tr:last-child td { border-bottom: none; }
+  table.admin-table tr:nth-child(even) td { background: var(--surface-warm); }
+  .role-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .role-pill.customer { background: #E0ECFB; color: #2255A4; }
+  .role-pill.chemist { background: #FFE7D3; color: var(--primary-dark); }
+  .mono { font-family: Consolas, monospace; font-size: 12px; }
+  #refresh-btn { margin-left: auto; }
+</style>
+</head>
+<body style="background:var(--bg);">
+
+<div class="admin-shell">
+  <div class="admin-top">
+    <div>
+      <h1>📊 Live Server Data</h1>
+      <div class="admin-sub">Reads directly from <span class="mono">server/data.json</span> on this machine. For local project use only — not secured for public/internet use.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="admin-sub" id="last-updated">Loading…</span>
+      <button class="btn btn-primary btn-sm" id="refresh-btn">Refresh Now</button>
+    </div>
+  </div>
+
+  <div class="admin-stats" id="stats"></div>
+
+  <h3>Registered Accounts</h3>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Phone</th><th>Signed Up</th></tr></thead>
+      <tbody id="users-body"></tbody>
+    </table>
+  </div>
+
+  <h3>Chemist Shops</h3>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Shop Name</th><th>Owner Account</th><th>Address</th><th>Online?</th><th>License No.</th></tr></thead>
+      <tbody id="chemists-body"></tbody>
+    </table>
+  </div>
+
+  <h3>Orders</h3>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Customer</th><th>Chemist</th><th>Status</th><th>Total</th><th>OTP</th><th>Placed At</th></tr></thead>
+      <tbody id="orders-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

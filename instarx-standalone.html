@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaRX — Medicines Delivered in Minutes</title>
+<style>
+:root {
+  --primary: #E1603D; --primary-dark: #C24B2B; --primary-light: #FBE3D5;
+  --secondary: #F2A93C; --accent-green: #3E8E5A;
+  --bg: #FFF8F1; --surface: #FFFFFF; --surface-warm: #FFF1E4;
+  --text: #3A2A1E; --text-muted: #8A7364; --border: #F0DFC9; --danger: #D64545;
+  --shadow: 0 2px 10px rgba(154, 92, 45, 0.08); --shadow-lg: 0 8px 28px rgba(154, 92, 45, 0.14);
+  --radius: 14px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.4; }
+a { text-decoration: none; color: inherit; cursor: pointer; }
+button { font-family: inherit; cursor: pointer; }
+img { max-width: 100%; display: block; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: var(--radius-sm); padding: 11px 20px; font-size: 15px; font-weight: 600; transition: transform .08s ease, box-shadow .15s ease, background .15s ease; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-outline { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-outline:hover { background: var(--primary-light); }
+.btn-secondary { background: var(--secondary); color: #4A2E00; }
+.btn-secondary:hover { filter: brightness(0.95); }
+.btn-ghost { background: transparent; color: var(--text); }
+.btn-block { width: 100%; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.top-strip { background: var(--primary-dark); color: #fff; font-size: 13px; padding: 6px 20px; }
+.top-strip .container { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 6px; }
+.navbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+.navbar .container { display: flex; align-items: center; gap: 24px; padding: 14px 20px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; line-height: 1.1; flex-shrink: 0; }
+.brand .logo { font-size: 26px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+.brand .logo .dot { color: var(--secondary); }
+.brand .tagline { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+.search-wrap { flex: 1 1 320px; position: relative; min-width: 220px; }
+.search-box { display: flex; align-items: center; background: var(--surface-warm); border: 1.5px solid var(--border); border-radius: 999px; padding: 0 6px 0 16px; }
+.search-box:focus-within { border-color: var(--primary); background: #fff; }
+.search-box input { flex: 1; border: none; background: transparent; outline: none; padding: 11px 8px; font-size: 14.5px; color: var(--text); }
+.search-box button { background: var(--primary); color: #fff; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 600; font-size: 14px; }
+.search-suggestions { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); max-height: 360px; overflow-y: auto; z-index: 50; display: none; }
+.search-suggestions.show { display: block; }
+.suggestion-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--surface-warm); }
+.suggestion-item .icon { font-size: 20px; }
+.suggestion-item .name { font-weight: 600; font-size: 14px; }
+.suggestion-item .meta { font-size: 12px; color: var(--text-muted); }
+.suggestion-item .price { margin-left: auto; font-weight: 700; color: var(--primary-dark); font-size: 13.5px; }
+.suggestion-empty { padding: 16px; color: var(--text-muted); font-size: 13.5px; text-align: center; }
+.nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+.icon-link { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--text); padding: 6px 8px; border-radius: var(--radius-sm); position: relative; }
+.icon-link:hover { background: var(--surface-warm); }
+.icon-link .glyph { font-size: 19px; }
+.cart-badge { position: absolute; top: 0; right: 0; background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; border-radius: 50%; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; }
+.category-nav { background: var(--surface-warm); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.category-nav .container { display: flex; gap: 26px; padding: 11px 20px; white-space: nowrap; }
+.category-nav a { font-size: 14px; font-weight: 600; color: var(--text); }
+.category-nav a:hover { color: var(--primary-dark); }
+.hero { background: linear-gradient(135deg, var(--primary-light) 0%, #FFF3E9 60%, #FFF8F1 100%); padding: 36px 0; }
+.hero .container { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+.hero-copy { flex: 1 1 380px; min-width: 280px; }
+.hero-copy h1 { font-size: clamp(28px, 4vw, 42px); margin: 0 0 6px; line-height: 1.15; }
+.hero-copy h1 .accent { color: var(--primary); display: block; }
+.hero-copy p.sub { color: var(--text-muted); font-size: 16px; margin: 10px 0 18px; }
+.hero-badges { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; font-size: 13.5px; color: var(--text); }
+.hero-badges span { display: flex; align-items: center; gap: 6px; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.location-pill { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid var(--border); border-radius: 999px; padding: 8px 16px; font-size: 13.5px; margin-bottom: 16px; max-width: 100%; }
+.location-pill button { background: none; border: none; color: var(--primary-dark); font-weight: 700; font-size: 13px; }
+.hero-offer { flex: 1 1 300px; min-width: 260px; background: #fff; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+.hero-offer .off { color: var(--accent-green); font-weight: 800; font-size: 22px; }
+.hero-offer .desc { color: var(--text-muted); font-size: 14px; margin-bottom: 12px; }
+.promo-code { display: flex; align-items: center; gap: 10px; background: var(--surface-warm); border: 1.5px dashed var(--secondary); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; }
+.promo-code b { color: var(--primary-dark); letter-spacing: 1px; }
+.hero-offer-features { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--text-muted); flex-wrap: wrap; }
+.section { padding: 34px 0; }
+.section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.section-title h2 { font-size: 21px; margin: 0; }
+.section-title a { font-size: 13.5px; font-weight: 700; color: var(--primary-dark); }
+.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
+.category-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 8px; text-align: center; transition: box-shadow .15s ease, transform .1s ease; display: block; }
+.category-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--primary-light); }
+.category-card .emoji { font-size: 30px; margin-bottom: 8px; }
+.category-card .label { font-size: 13px; font-weight: 600; }
+.promo-strips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.promo-strip { border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 4px; }
+.promo-strip.warm { background: linear-gradient(135deg, #FFE7D3, #FFF3E6); }
+.promo-strip.amber { background: linear-gradient(135deg, #FFF0CF, #FFF8E6); }
+.promo-strip.green { background: linear-gradient(135deg, #E3F3E8, #F2FBF5); }
+.promo-strip .big { font-size: 22px; font-weight: 800; }
+.promo-strip .small { font-size: 13.5px; color: var(--text-muted); margin-bottom: 8px; }
+.promo-strip a { font-weight: 700; font-size: 13.5px; color: var(--primary-dark); }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
+.split-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.split-grid .side-col { display: flex; flex-direction: column; gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+.panel-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.panel-title h3 { margin: 0; font-size: 16px; }
+.panel-title a { font-size: 12.5px; font-weight: 700; color: var(--primary-dark); }
+.stepper { display: flex; align-items: center; margin: 10px 0 14px; }
+.step { display: flex; flex-direction: column; align-items: center; flex: 1; text-align: center; position: relative; }
+.step .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--border); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; z-index: 2; }
+.step.done .dot { background: var(--accent-green); }
+.step.current .dot { background: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+.step .label { font-size: 10.5px; margin-top: 6px; color: var(--text-muted); max-width: 70px; }
+.step.done .label, .step.current .label { color: var(--text); font-weight: 600; }
+.step:not(:last-child)::after { content: ""; position: absolute; top: 14px; left: 50%; width: 100%; height: 2px; background: var(--border); z-index: 1; }
+.step.done:not(:last-child)::after { background: var(--accent-green); }
+.doctor-row { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.doctor-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.doctor-row .name { font-weight: 700; font-size: 14.5px; }
+.doctor-row .spec { font-size: 12.5px; color: var(--text-muted); }
+.doctor-row .rating { font-size: 12.5px; color: var(--secondary); margin-top: 2px; }
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); display: inline-block; margin-right: 5px; }
+.carousel { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; scroll-behavior: smooth; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; flex: 0 0 190px; display: flex; flex-direction: column; gap: 6px; }
+.product-card .thumb { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 42px; background: var(--surface-warm); border-radius: var(--radius-sm); margin-bottom: 4px; }
+.product-card .name { font-size: 14px; font-weight: 700; min-height: 36px; }
+.product-card .unit { font-size: 11.5px; color: var(--text-muted); }
+.product-card .price-row { display: flex; align-items: baseline; gap: 6px; }
+.product-card .price { font-weight: 800; color: var(--primary-dark); font-size: 15px; }
+.product-card .mrp { text-decoration: line-through; color: var(--text-muted); font-size: 12.5px; }
+.product-card .off { color: var(--accent-green); font-size: 12px; font-weight: 700; }
+.product-card .rating { font-size: 11.5px; color: var(--secondary); font-weight: 700; }
+.trust-strip { background: var(--surface-warm); border-top: 1px solid var(--border); padding: 22px 0; }
+.trust-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; text-align: center; }
+.trust-item .icon { font-size: 24px; margin-bottom: 6px; }
+.trust-item .t { font-weight: 700; font-size: 13.5px; }
+.trust-item .d { font-size: 11.5px; color: var(--text-muted); }
+.site-footer { background: #2E2016; color: #F3E4D6; padding: 40px 0 18px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.footer-grid h4 { font-size: 14px; margin: 0 0 12px; color: #fff; }
+.footer-grid a, .footer-grid p { display: block; font-size: 13px; color: #C9B4A2; margin-bottom: 8px; }
+.footer-brand .logo { font-size: 22px; font-weight: 800; color: var(--secondary); }
+.footer-bottom { border-top: 1px solid #4A3626; padding-top: 16px; font-size: 12.5px; color: #A98F7B; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.auth-shell { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+.auth-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; max-width: 420px; width: 100%; box-shadow: var(--shadow-lg); }
+.auth-card h2 { margin-top: 0; }
+.role-toggle { display: flex; gap: 8px; margin-bottom: 18px; }
+.role-toggle button { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #fff; font-weight: 700; font-size: 13.5px; }
+.role-toggle button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); font-size: 14px; outline: none; background: #fff; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); }
+.form-error { background: #FDEBEA; color: var(--danger); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; }
+.form-note { background: var(--surface-warm); color: var(--text-muted); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12.5px; margin-bottom: 14px; }
+.switch-link { text-align: center; margin-top: 14px; font-size: 13.5px; }
+.switch-link a { color: var(--primary-dark); font-weight: 700; }
+.page-header { padding: 22px 0 4px; }
+.page-header h1 { font-size: 24px; margin: 0; }
+.cart-line { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.cart-line .thumb { width: 54px; height: 54px; background: var(--surface-warm); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.cart-line .info { flex: 1; }
+.qty-control { display: flex; align-items: center; gap: 10px; }
+.qty-control button { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff; font-weight: 700; }
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; }
+.summary-row.total { font-weight: 800; font-size: 16px; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 6px; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.badge.pending { background: #FFF3D6; color: #A96A00; }
+.badge.accepted { background: #E0ECFB; color: #2255A4; }
+.badge.packed { background: #F0E3FB; color: #6B36A8; }
+.badge.out_for_delivery { background: #FFE7D3; color: var(--primary-dark); }
+.badge.delivered { background: #E3F3E8; color: var(--accent-green); }
+.order-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.order-card .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+.order-card ul { margin: 8px 0; padding-left: 18px; font-size: 13.5px; }
+.order-actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.toggle-switch { display: inline-flex; align-items: center; gap: 10px; }
+.toggle-switch input { display: none; }
+.toggle-switch .track { width: 44px; height: 24px; background: var(--border); border-radius: 999px; position: relative; transition: background .15s; }
+.toggle-switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle-switch input:checked + .track { background: var(--accent-green); }
+.toggle-switch input:checked + .track::after { left: 22px; }
+.chip { padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: #fff; font-size: 13px; font-weight: 600; color: var(--text); }
+.chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.empty-state { text-align: center; padding: 50px 16px; color: var(--text-muted); }
+.empty-state .big-emoji { font-size: 46px; margin-bottom: 10px; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 13.5px; box-shadow: var(--shadow-lg); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+@media (max-width: 980px) {
+  .dash-grid { grid-template-columns: 1fr; } .split-grid { grid-template-columns: 1fr; }
+  .promo-strips { grid-template-columns: 1fr 1fr; } .footer-grid { grid-template-columns: 1fr 1fr; }
+  .trust-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .navbar .container { padding: 10px 14px; } .nav-actions { gap: 4px; } .icon-link span.text { display: none; }
+  .promo-strips { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: 1fr 1fr; }
+  .trust-grid { grid-template-columns: repeat(2, 1fr); } .hero { padding: 24px 0; }
+  .category-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   InstaRX — single-file standalone build.
+   Everything (auth, cart, orders, chemist matching) runs in the
+   browser and is stored in this browser's localStorage. There is
+   no server, so two different computers can't share live orders —
+   test the full flow by logging out and back in as a different
+   demo account, in this same browser.
+   ============================================================ */
+
+const DB_KEY = "instarx_standalone_db";
+const SESSION_KEY = "instarx_standalone_session";
+const NEARBY_RADIUS_KM = 15;
+
+const CATEGORY_ICONS = {
+  "Prescription Medicines": "\u{1F48A}", "OTC Medicines": "\u{1FA79}",
+  "Healthcare Essentials": "\u{1F6E1}️", "Personal Care": "\u{1F9F4}",
+  "Baby Care": "\u{1F476}", "Diabetes Care": "\u{1FA78}",
+  "Vitamins & Supplements": "\u{1F9EA}", "Medical Devices": "\u{1FA7A}",
+};
+
+const MEDICINES_SEED = [
+  ["Dolo 650mg","Micro Labs","Prescription Medicines",32,40,"Strip of 15 Tablets",4.8,2400,true],
+  ["Crocin 650mg","GSK","OTC Medicines",60,82,"Strip of 15 Tablets",4.8,2100,true],
+  ["Combiflam","Sanofi","Prescription Medicines",45,55,"Strip of 20 Tablets",4.7,1600,true],
+  ["Disprin 325mg","Reckitt","OTC Medicines",42,60,"Strip of 15 Tablets",4.7,1800,true],
+  ["Benadryl 25mg","J&J","OTC Medicines",55,75,"Strip of 20 Tablets",4.6,975,true],
+  ["Vicks Inhaler","P&G","OTC Medicines",45,60,"Pack of 1",4.9,3200,true],
+  ["Vicks Vaporub 50ml","P&G","Healthcare Essentials",110,135,"Jar of 50ml",4.8,2900,false],
+  ["ORS Powder","FDC","Healthcare Essentials",25,30,"Pack of 10 sachets",4.7,1400,false],
+  ["Volini Gel 50g","Sun Pharma","Healthcare Essentials",140,165,"Tube of 50g",4.6,1900,false],
+  ["Betadine Antiseptic 100ml","Win-Medicare","Healthcare Essentials",95,110,"Bottle of 100ml",4.7,1100,false],
+  ["Digene Gel","Abbott","OTC Medicines",110,130,"Bottle of 200ml",4.5,890,false],
+  ["Eno Regular","GSK","OTC Medicines",18,22,"Pack of 5 sachets",4.6,2600,false],
+  ["Moov Pain Relief Spray","Reckitt","Healthcare Essentials",210,250,"Spray of 65g",4.5,780,false],
+  ["Dettol Antiseptic Liquid 100ml","Reckitt","Personal Care",65,78,"Bottle of 100ml",4.8,4200,true],
+  ["Savlon Soap","J&J","Personal Care",40,48,"Bar of 100g",4.6,1500,false],
+  ["Nivea Body Lotion 200ml","Beiersdorf","Personal Care",210,250,"Bottle of 200ml",4.5,2100,false],
+  ["Colgate Sensitive Toothpaste","Colgate","Personal Care",95,110,"Tube of 70g",4.6,1650,false],
+  ["Johnson's Baby Powder 200g","J&J","Baby Care",165,190,"Bottle of 200g",4.8,3300,true],
+  ["Pampers Diapers (M)","P&G","Baby Care",499,599,"Pack of 34",4.7,2700,false],
+  ["Johnson's Baby Oil 100ml","J&J","Baby Care",130,150,"Bottle of 100ml",4.7,1900,false],
+  ["Cerelac Baby Cereal","Nestle","Baby Care",210,240,"Pack of 300g",4.6,1200,false],
+  ["Accu-Chek Glucometer","Roche","Diabetes Care",950,1200,"Pack of 1",4.6,1800,true],
+  ["Accu-Chek Test Strips","Roche","Diabetes Care",650,780,"Pack of 50",4.5,1400,false],
+  ["Insulin Syringes","BD","Diabetes Care",210,260,"Pack of 10",4.6,900,false],
+  ["Sugar Free Gold","Zydus","Diabetes Care",130,150,"Pack of 100 tablets",4.5,1100,false],
+  ["Revital H","Sun Pharma","Vitamins & Supplements",480,550,"Bottle of 30 capsules",4.7,2200,true],
+  ["Shelcal 500","Torrent","Vitamins & Supplements",140,165,"Strip of 15 Tablets",4.6,1700,false],
+  ["Zincovit Tablets","Apex Labs","Vitamins & Supplements",95,115,"Strip of 15 Tablets",4.5,1300,false],
+  ["Limcee Vitamin C","Abbott","Vitamins & Supplements",35,45,"Strip of 15 Tablets",4.7,2500,false],
+  ["Digital BP Monitor","Omron","Medical Devices",1650,1999,"Pack of 1",4.7,2100,true],
+  ["Digital Thermometer","Dr Trust","Medical Devices",199,250,"Pack of 1",4.6,3100,false],
+  ["Pulse Oximeter","Dr Trust","Medical Devices",899,1100,"Pack of 1",4.6,2600,false],
+  ["Nebulizer Machine","Omron","Medical Devices",2100,2500,"Pack of 1",4.5,640,false],
+  ["N95 Mask (Pack of 5)","Venus","Medical Devices",250,300,"Pack of 5",4.6,1900,false],
+];
+
+const CHEMISTS_SEED = [
+  ["MedRush Chemist - Andheri", "Andheri West, Mumbai", 19.1197, 72.8468],
+  ["Apollo Pharmacy - Bandra", "Bandra West, Mumbai", 19.0596, 72.8295],
+  ["Wellness Forever - Powai", "Powai, Mumbai", 19.1176, 72.9060],
+  ["City Chemist - Dadar", "Dadar, Mumbai", 19.0178, 72.8478],
+];
+
+function seedDB() {
+  const db = { users: [], chemists: [], medicines: [], orders: [], carts: {}, next_id: { user: 1, order: 1, medicine: 1 } };
+  for (const [name, brand, category, price, mrp, unit, rating, rating_count, popular] of MEDICINES_SEED) {
+    const id = db.next_id.medicine++;
+    db.medicines.push({ id, name, brand, category, price, mrp, discount_pct: Math.round((1 - price / mrp) * 100), unit, rating, rating_count, popular, icon: CATEGORY_ICONS[category] || "\u{1F48A}", stock: true });
+  }
+  for (const [shop_name, address, lat, lng] of CHEMISTS_SEED) {
+    const uid = db.next_id.user++;
+    db.users.push({ id: uid, role: "chemist", name: shop_name, email: shop_name.toLowerCase().replace(/\s*-\s*/g, " ").trim().replace(/\s+/g, ".") + "@instarx.local", password: "demo1234", phone: "9800000000" });
+    db.chemists.push({ user_id: uid, shop_name, license_no: `MH-PH-${String(uid).padStart(4, "0")}`, address, lat, lng, online: true });
+  }
+  saveDB(db);
+  return db;
+}
+
+function loadDB() {
+  const raw = localStorage.getItem(DB_KEY);
+  if (!raw) return seedDB();
+  try { return JSON.parse(raw); } catch (e) { return seedDB(); }
+}
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function nextId(db, kind) { db.next_id[kind] = db.next_id[kind] || 1; const id = db.next_id[kind]; db.next_id[kind] = id + 1; return id; }
+function getSessionUserId() { const v = localStorage.getItem(SESSION_KEY); return v ? Number(v) : null; }
+function setSessionUserId(id) { if (id) localStorage.setItem(SESSION_KEY, String(id)); else localStorage.removeItem(SESSION_KEY); }
+
+function currentUser(db) { const uid = getSessionUserId(); return uid ? db.users.find((u) => u.id === uid) || null : null; }
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const r = 6371, toRad = (d) => (d * Math.PI) / 180;
+  const dphi = toRad(lat2 - lat1), dl = toRad(lng2 - lng1);
+  const a = Math.sin(dphi / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dl / 2) ** 2;
+  return 2 * r * Math.asin(Math.sqrt(a));
+}
+
+/* ---------- "API" layer (operates on the local DB) ---------- */
+
+function apiSignup(payload) {
+  const db = loadDB();
+  const email = (payload.email || "").trim().toLowerCase();
+  const name = (payload.name || "").trim();
+  if (!["customer", "chemist"].includes(payload.role)) return { error: "Invalid role" };
+  if (!name || !email || !payload.password || payload.password.length < 4) return { error: "Name, email and a password (4+ chars) are required" };
+  if (db.users.some((u) => u.email === email)) return { error: "An account with this email already exists" };
+  const uid = nextId(db, "user");
+  const user = { id: uid, role: payload.role, name, email, password: payload.password, phone: (payload.phone || "").trim() };
+  db.users.push(user);
+  if (payload.role === "chemist") {
+    db.chemists.push({ user_id: uid, shop_name: payload.shop_name || name, license_no: payload.license_no || "", address: payload.address || "", lat: payload.lat ?? null, lng: payload.lng ?? null, online: false });
+  }
+  saveDB(db);
+  setSessionUserId(uid);
+  return { user };
+}
+
+function apiLogin(email, password) {
+  const db = loadDB();
+  const user = db.users.find((u) => u.email === (email || "").trim().toLowerCase());
+  if (!user || user.password !== password) return { error: "Invalid email or password" };
+  setSessionUserId(user.id);
+  return { user };
+}
+
+function apiLogout() { setSessionUserId(null); }
+
+function apiMe() {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { user: null };
+  const resp = { user };
+  if (user.role === "chemist") resp.chemist = db.chemists.find((c) => c.user_id === user.id) || null;
+  return resp;
+}
+
+function apiCategories() {
+  const db = loadDB();
+  const seen = new Set(), out = [];
+  for (const m of db.medicines) if (!seen.has(m.category)) { seen.add(m.category); out.push({ name: m.category, icon: m.icon }); }
+  return out;
+}
+
+function apiMedicines({ q, category, popular } = {}) {
+  const db = loadDB();
+  let items = db.medicines;
+  if (q) { const ql = q.toLowerCase(); items = items.filter((m) => m.name.toLowerCase().includes(ql) || m.brand.toLowerCase().includes(ql) || m.category.toLowerCase().includes(ql)); }
+  if (category) items = items.filter((m) => m.category === category);
+  if (popular) items = items.filter((m) => m.popular);
+  return items;
+}
+
+function apiCart() {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { error: "Login required" };
+  const cart = db.carts[user.id] || [];
+  const byId = Object.fromEntries(db.medicines.map((m) => [m.id, m]));
+  let total = 0;
+  const items = cart.map((line) => {
+    const m = byId[line.medicine_id];
+    if (!m) return null;
+    const subtotal = m.price * line.qty;
+    total += subtotal;
+    return { medicine: m, qty: line.qty, subtotal };
+  }).filter(Boolean);
+  return { items, total };
+}
+
+function apiAddToCart(medicineId, qty) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { error: "Login required" };
+  const cart = (db.carts[user.id] = db.carts[user.id] || []);
+  const line = cart.find((l) => l.medicine_id === medicineId);
+  if (line) line.qty = Math.max(1, line.qty + qty);
+  else cart.push({ medicine_id: medicineId, qty: Math.max(1, qty) });
+  saveDB(db);
+  return { ok: true };
+}
+
+function apiRemoveFromCart(medicineId) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { error: "Login required" };
+  db.carts[user.id] = (db.carts[user.id] || []).filter((l) => l.medicine_id !== medicineId);
+  saveDB(db);
+  return { ok: true };
+}
+
+function apiPlaceOrder({ address, prescription_file }) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { error: "Login required" };
+  if (user.role !== "customer") return { error: "Only customers can place orders" };
+  const cart = db.carts[user.id] || [];
+  if (!cart.length && !prescription_file) return { error: "Your cart is empty and no prescription was attached" };
+  const byId = Object.fromEntries(db.medicines.map((m) => [m.id, m]));
+  let total = 0;
+  const items = cart.map((l) => { const m = byId[l.medicine_id]; if (!m) return null; total += m.price * l.qty; return { medicine_id: m.id, name: m.name, qty: l.qty, price: m.price }; }).filter(Boolean);
+
+  let notified = [];
+  if (address && address.lat != null && address.lng != null) {
+    const nearby = db.chemists.filter((c) => c.online && c.lat != null)
+      .map((c) => ({ dist: haversineKm(address.lat, address.lng, c.lat, c.lng), uid: c.user_id }))
+      .sort((a, b) => a.dist - b.dist);
+    notified = nearby.slice(0, 6).map((n) => n.uid);
+  }
+  const id = nextId(db, "order");
+  const order = { id, customer_id: user.id, customer_name: user.name, items, total, prescription_file: prescription_file || null, address, status: "pending", chemist_id: null, delivery_charge: null, notified_chemists: notified, created_at: Date.now(), updated_at: Date.now() };
+  db.orders.push(order);
+  db.carts[user.id] = [];
+  saveDB(db);
+  return { order };
+}
+
+function orderPublic(o, db) {
+  let chemist_name = null;
+  if (o.chemist_id) { const c = db.users.find((u) => u.id === o.chemist_id); chemist_name = c ? c.name : null; }
+  return { ...o, chemist_name };
+}
+
+function apiMyOrders() {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user) return { error: "Login required" };
+  return { orders: db.orders.filter((o) => o.customer_id === user.id).map((o) => orderPublic(o, db)).sort((a, b) => b.created_at - a.created_at) };
+}
+
+function apiChemistOnline(online) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user || user.role !== "chemist") return { error: "Chemist login required" };
+  const c = db.chemists.find((c) => c.user_id === user.id);
+  if (!c) return { error: "Chemist profile not found" };
+  c.online = online; saveDB(db);
+  return { chemist: c };
+}
+
+function apiChemistIncoming() {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user || user.role !== "chemist") return { error: "Chemist login required" };
+  return { orders: db.orders.filter((o) => o.status === "pending" && (!o.notified_chemists.length || o.notified_chemists.includes(user.id))).map((o) => orderPublic(o, db)).sort((a, b) => a.created_at - b.created_at) };
+}
+
+function apiChemistMine() {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user || user.role !== "chemist") return { error: "Chemist login required" };
+  return { orders: db.orders.filter((o) => o.chemist_id === user.id).map((o) => orderPublic(o, db)).sort((a, b) => b.updated_at - a.updated_at) };
+}
+
+function apiAcceptOrder(oid) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user || user.role !== "chemist") return { error: "Chemist login required" };
+  const o = db.orders.find((o) => o.id === oid);
+  if (!o) return { error: "Not found" };
+  if (o.status !== "pending") return { error: "Order already taken" };
+  o.status = "accepted"; o.chemist_id = user.id; o.updated_at = Date.now();
+  saveDB(db);
+  return { order: orderPublic(o, db) };
+}
+
+const VALID_TRANSITIONS = { accepted: "packed", packed: "out_for_delivery", out_for_delivery: "delivered" };
+
+function apiUpdateStatus(oid, deliveryCharge) {
+  const db = loadDB();
+  const user = currentUser(db);
+  if (!user || user.role !== "chemist") return { error: "Chemist login required" };
+  const o = db.orders.find((o) => o.id === oid);
+  if (!o || o.chemist_id !== user.id) return { error: "Not found" };
+  const next = VALID_TRANSITIONS[o.status];
+  if (!next) return { error: "Order cannot be advanced further" };
+  if (next === "out_for_delivery" && deliveryCharge != null) o.delivery_charge = Number(deliveryCharge);
+  o.status = next; o.updated_at = Date.now();
+  saveDB(db);
+  return { order: orderPublic(o, db) };
+}
+
+/* ---------- shared helpers ---------- */
+
+function toast(message) {
+  let el = document.querySelector(".toast");
+  if (!el) { el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+  el.textContent = message; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2400);
+}
+function escapeHtml(str) { return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function currency(n) { return "₹" + Number(n).toFixed(0); }
+function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+const STATUS_LABELS = { pending: "Order Placed", accepted: "Accepted by Chemist", packed: "Packed", out_for_delivery: "Out for Delivery", delivered: "Delivered" };
+const STATUS_STEPS = ["pending", "accepted", "packed", "out_for_delivery", "delivered"];
+const STATUS_STEP_LABELS = ["Confirmed", "Accepted", "Packed", "Out for Delivery", "Delivered"];
+
+function stepperHtml(status) {
+  const idx = STATUS_STEPS.indexOf(status);
+  return STATUS_STEPS.map((s, i) => {
+    const isLastReached = i === idx && i === STATUS_STEPS.length - 1;
+    let cls = "step";
+    if (i < idx || isLastReached) cls += " done"; else if (i === idx) cls += " current";
+    const dot = (i < idx || isLastReached) ? "✓" : i + 1;
+    return `<div class="${cls}"><div class="dot">${dot}</div><div class="label">${STATUS_STEP_LABELS[i]}</div></div>`;
+  }).join("");
+}
+
+function getSavedAddress() { const raw = localStorage.getItem("instarx_standalone_address"); return raw ? JSON.parse(raw) : null; }
+function saveAddress(addr) { localStorage.setItem("instarx_standalone_address", JSON.stringify(addr)); }
+
+async function detectLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error("Geolocation is not supported")); return; }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      let label = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+        if (res.ok) { const data = await res.json(); if (data && data.display_name) label = data.display_name; }
+      } catch (e) {}
+      resolve({ lat: latitude, lng: longitude, label });
+    }, (err) => reject(err), { enableHighAccuracy: true, timeout: 10000 });
+  });
+}
+async function geocodeAddress(query) {
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error("Address lookup failed");
+  const results = await res.json();
+  if (!results.length) throw new Error("Couldn't find that address");
+  const r = results[0];
+  return { lat: parseFloat(r.lat), lng: parseFloat(r.lon), label: r.display_name };
+}
+
+function productCardHtml(m) {
+  return `<div class="product-card">
+    <div class="thumb">${m.icon}</div>
+    <div class="name">${escapeHtml(m.name)}</div>
+    <div class="unit">${escapeHtml(m.unit)}</div>
+    <div class="price-row"><span class="price">${currency(m.price)}</span><span class="mrp">${currency(m.mrp)}</span><span class="off">${m.discount_pct}% OFF</span></div>
+    <div class="rating">⭐ ${m.rating} (${m.rating_count})</div>
+    <button class="btn btn-outline btn-sm btn-block add-to-cart-btn" data-id="${m.id}">\u{1F6D2} Add to Cart</button>
+  </div>`;
+}
+function wireAddToCart(scope) {
+  scope.querySelectorAll(".add-to-cart-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.id);
+      const res = apiAddToCart(id, 1);
+      if (res.error) { toast("Please login to add items to your cart"); setTimeout(() => go("login"), 700); }
+      else { toast("Added to cart"); renderNavActions(); }
+    });
+  });
+}
+
+/* ---------- router ---------- */
+
+function parseHash() {
+  const raw = location.hash.slice(1) || "/home";
+  const [path, qs] = raw.split("?");
+  return { path: path.replace(/^\//, "") || "home", params: new URLSearchParams(qs || "") };
+}
+function go(path, params) {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  location.hash = "/" + path + qs;
+}
+window.addEventListener("hashchange", render);
+window.addEventListener("DOMContentLoaded", render);
+
+function render() {
+  const { path, params } = parseHash();
+  const views = { home: viewHome, category: viewCategory, cart: viewCart, login: viewLogin, upload: viewUpload, chemist: viewChemist, track: viewTrack };
+  const view = views[path] || viewHome;
+  document.getElementById("app").innerHTML = shell(view(params), params.get("cat"));
+  wireShell(params);
+  view.after && view.after(params);
+}
+
+/* ---------- shell (header/footer) ---------- */
+
+function shell(contentHtml, activeCategory) {
+  const addr = getSavedAddress();
+  const cats = apiCategories();
+  return `
+    <div class="top-strip"><div class="container">
+      <span>\u{1F4CD} ${addr ? escapeHtml(truncate(addr.label, 46)) : "Location not set"}</span>
+      <span>\u{1F69A} FREE delivery from your nearest local chemist</span>
+    </div></div>
+    <header class="navbar"><div class="container">
+      <a href="#/home" class="brand"><span class="logo">Insta<span class="dot">RX</span></span><span class="tagline">Fast relief is what matters the most</span></a>
+      <div class="search-wrap">
+        <form class="search-box" id="search-form" autocomplete="off">
+          <input type="text" id="search-input" placeholder="Search for medicines, health products...">
+          <button type="submit">Search</button>
+        </form>
+        <div class="search-suggestions" id="search-suggestions"></div>
+      </div>
+      <div class="nav-actions" id="nav-actions"></div>
+    </div></header>
+    <nav class="category-nav"><div class="container">
+      ${cats.map((c) => `<a href="#/category?cat=${encodeURIComponent(c.name)}" ${activeCategory === c.name ? 'style="color:var(--primary-dark)"' : ""}>${c.icon} ${escapeHtml(c.name)}</a>`).join("")}
+    </div></nav>
+    <main>${contentHtml}</main>
+    <div class="trust-strip"><div class="container trust-grid">
+      <div class="trust-item"><div class="icon">✅</div><div class="t">Verified Local Chemists</div><div class="d">Every partner license-checked</div></div>
+      <div class="trust-item"><div class="icon">⏱️</div><div class="t">10-Minute Promise</div><div class="d">Packed and dispatched fast</div></div>
+      <div class="trust-item"><div class="icon">\u{1F4CD}</div><div class="t">Hyperlocal Matching</div><div class="d">Ordered from the shop nearest you</div></div>
+      <div class="trust-item"><div class="icon">\u{1F510}</div><div class="t">Secure Checkout</div><div class="d">Your data stays protected</div></div>
+      <div class="trust-item"><div class="icon">\u{1F4AC}</div><div class="t">Always-On Support</div><div class="d">Help whenever you need it</div></div>
+    </div></div>
+    <footer class="site-footer"><div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="logo">InstaRX</div><p style="margin-top:10px;max-width:280px;">Connecting you to verified local chemists for medicine delivery in minutes, not hours.</p></div>
+        <div><h4>Company</h4><a href="#/home">About InstaRX</a><a href="#/login?mode=signup&role=chemist">Partner your Pharmacy</a><a href="#/login">Careers</a></div>
+        <div><h4>For Customers</h4><a href="#/category">Browse Medicines</a><a href="#/upload">Upload Prescription</a><a href="#/track">Track Order</a></div>
+        <div><h4>Support</h4><a href="#">Help Center</a><a href="#">Contact Us</a><a href="#">Terms &amp; Privacy</a></div>
+      </div>
+      <div class="footer-bottom"><span>&copy; 2026 InstaRX &mdash; A university project prototype, not a real pharmacy service.</span><span>Made with care for faster relief.</span></div>
+    </div></footer>
+  `;
+}
+
+function wireShell(currentParams) {
+  renderNavActions();
+  wireSearch();
+  const form = document.getElementById("search-form");
+  form.addEventListener("submit", (e) => { e.preventDefault(); const q = document.getElementById("search-input").value.trim(); if (q) go("category", { q }); });
+}
+
+function renderNavActions() {
+  const el = document.getElementById("nav-actions");
+  const me = apiMe();
+  let cartCount = 0;
+  if (me.user && me.user.role === "customer") { const c = apiCart(); if (!c.error) cartCount = c.items.reduce((s, i) => s + i.qty, 0); }
+  const loginBlock = me.user
+    ? `<a href="#" id="logout-link" class="icon-link"><span class="glyph">\u{1F464}</span><span class="text">${escapeHtml(me.user.name.split(" ")[0])}</span></a>`
+    : `<a href="#/login" class="icon-link"><span class="glyph">\u{1F464}</span><span class="text">Login/Signup</span></a>`;
+  const dashboardLink = me.user && me.user.role === "chemist" ? `<a href="#/chemist" class="icon-link"><span class="glyph">\u{1F3EA}</span><span class="text">Dashboard</span></a>` : "";
+  el.innerHTML = `
+    <a href="#/upload" class="icon-link"><span class="glyph">\u{1F4C4}</span><span class="text">Upload Rx</span></a>
+    <a href="#/track" class="icon-link"><span class="glyph">\u{1F69A}</span><span class="text">Track Order</span></a>
+    ${dashboardLink}
+    <a href="#/cart" class="icon-link"><span class="glyph">\u{1F6D2}</span><span class="text">Cart</span>${cartCount ? `<span class="cart-badge">${cartCount}</span>` : ""}</a>
+    ${loginBlock}
+  `;
+  const logoutLink = document.getElementById("logout-link");
+  if (logoutLink) logoutLink.addEventListener("click", (e) => { e.preventDefault(); apiLogout(); toast("Logged out"); go("home"); render(); });
+}
+
+function wireSearch() {
+  const input = document.getElementById("search-input");
+  const box = document.getElementById("search-suggestions");
+  let debounce;
+  input.addEventListener("input", () => {
+    clearTimeout(debounce);
+    const q = input.value.trim();
+    if (!q) { box.classList.remove("show"); return; }
+    debounce = setTimeout(() => {
+      const medicines = apiMedicines({ q });
+      if (!medicines.length) box.innerHTML = `<div class="suggestion-empty">No matches for "${escapeHtml(q)}"</div>`;
+      else box.innerHTML = medicines.slice(0, 8).map((m) => `
+        <a class="suggestion-item" href="#/category?cat=${encodeURIComponent(m.category)}">
+          <span class="icon">${m.icon}</span>
+          <span><div class="name">${escapeHtml(m.name)}</div><div class="meta">${escapeHtml(m.brand)} · ${escapeHtml(m.category)}</div></span>
+          <span class="price">${currency(m.price)}</span>
+        </a>`).join("");
+      box.classList.add("show");
+    }, 200);
+  });
+  document.addEventListener("click", (e) => { if (!box.contains(e.target) && e.target !== input) box.classList.remove("show"); }, { once: false });
+}
+
+/* ---------- views ---------- */
+
+function viewHome() {
+  return `
+    <section class="hero"><div class="container">
+      <div class="hero-copy">
+        <div class="location-pill" id="location-pill"><span>\u{1F4CD} ${getSavedAddress() ? escapeHtml(truncate(getSavedAddress().label, 60)) : "Location not set"}</span><button id="change-location-btn">Change</button></div>
+        <h1>Medicines Delivered in<span class="accent">Just 10 Minutes</span></h1>
+        <p class="sub">Ordered from the verified chemist shop nearest you. Fast relief is what matters the most.</p>
+        <div class="hero-badges"><span>⏱️ 10 Min Delivery</span><span>✅ Genuine Medicines</span><span>\u{1F3F7}️ Best Prices</span></div>
+        <div class="hero-actions"><a href="#/category" class="btn btn-primary">⚡ Order Now</a><a href="#/upload" class="btn btn-outline">⬆️ Upload Prescription</a></div>
+      </div>
+      <div class="hero-offer">
+        <div class="off">Flat 25% OFF</div><div class="desc">on your first order</div>
+        <div class="promo-code"><span>Use Code:</span> <b>INSTARX25</b></div>
+        <div class="hero-offer-features"><span>\u{1F69A} Free delivery above &#8377;199</span><span>\u{1F510} Secure payments</span></div>
+      </div>
+    </div></section>
+    <section class="section"><div class="container">
+      <div class="section-title"><h2>Shop by Category</h2><a href="#/category">View All</a></div>
+      <div class="category-grid">${apiCategories().map((c) => `<a class="category-card" href="#/category?cat=${encodeURIComponent(c.name)}"><div class="emoji">${c.icon}</div><div class="label">${escapeHtml(c.name)}</div></a>`).join("")}</div>
+    </div></section>
+    <section class="section" style="padding-top:0;"><div class="container">
+      <div class="promo-strips">
+        <div class="promo-strip warm"><div class="big">Up to 50% OFF</div><div class="small">On everyday medicines</div><a href="#/category">Shop Now &rarr;</a></div>
+        <div class="promo-strip amber"><div class="big">Free Delivery</div><div class="small">On orders above &#8377;199</div><a href="#/category">Shop Now &rarr;</a></div>
+        <div class="promo-strip green"><div class="big">10 Minutes Express</div><div class="small">From your nearest chemist</div><a href="#/category">Order Now &rarr;</a></div>
+      </div>
+    </div></section>
+    <section class="section" style="padding-top:0;"><div class="container">
+      <div class="split-grid">
+        <div>
+          <div class="section-title"><h2>Top Selling Medicines</h2><a href="#/category">View All</a></div>
+          <div class="carousel" id="top-selling">${apiMedicines({ popular: true }).map(productCardHtml).join("")}</div>
+        </div>
+        <div class="side-col">
+          <div class="panel"><div class="panel-title"><h3>Live Order Tracking</h3><a href="#/track">View All</a></div><div id="live-tracking-panel"></div></div>
+          <div class="panel">
+            <div class="panel-title"><h3>Have a Question for a Chemist?</h3></div>
+            <div class="doctor-row"><div class="doctor-avatar">\u{1F469}‍⚕️</div><div><div class="name">Priya's Medical Store</div><div class="spec"><span class="online-dot"></span>Online now &middot; Bandra West</div><div class="rating">⭐ 4.8 (2.4K orders)</div></div></div>
+            <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 12px;">Chemists on InstaRX can answer quick dosage questions before you order.</p>
+            <a href="#/category" class="btn btn-secondary btn-block btn-sm">Browse Nearby Chemists</a>
+          </div>
+        </div>
+      </div>
+    </div></section>
+  `;
+}
+viewHome.after = function () {
+  wireAddToCart(document);
+  wireLocationPill();
+  const el = document.getElementById("live-tracking-panel");
+  const me = apiMe();
+  if (!me.user || me.user.role !== "customer") { el.innerHTML = `<div class="empty-state" style="padding:20px 0;"><div class="big-emoji">\u{1F4E6}</div>Login as a customer to see your live order status here.</div>`; return; }
+  const { orders } = apiMyOrders();
+  const active = orders.find((o) => o.status !== "delivered");
+  if (!active) { el.innerHTML = `<div class="empty-state" style="padding:20px 0;"><div class="big-emoji">\u{1F6CD}️</div>No active orders right now.</div>`; return; }
+  el.innerHTML = `<div class="stepper">${stepperHtml(active.status)}</div><div style="font-size:13px;color:var(--text-muted);">Order #${active.id} &middot; ${active.chemist_name ? escapeHtml(active.chemist_name) : "Waiting for a nearby chemist to accept"}</div>`;
+};
+
+async function wireLocationPill() {
+  const pill = document.getElementById("location-pill");
+  if (!pill) return;
+  const btn = document.getElementById("change-location-btn");
+  const span = pill.querySelector("span");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; span.textContent = "\u{1F4CD} Detecting your location...";
+    try { const addr = await detectLocation(); saveAddress(addr); render(); toast("Location updated"); }
+    catch (e) { toast("Location permission denied — set it manually in Cart"); span.textContent = `\u{1F4CD} ${getSavedAddress() ? escapeHtml(truncate(getSavedAddress().label, 60)) : "Location not set"}`; }
+    btn.disabled = false;
+  });
+}
+
+function viewCategory(params) {
+  const activeCat = params.get("cat") || "";
+  const q = params.get("q") || "";
+  const cats = apiCategories();
+  const medicines = apiMedicines({ category: activeCat, q });
+  const title = q ? `Search results for "${escapeHtml(q)}"` : (activeCat || "All Medicines");
+  return `
+    <div class="page-header"><div class="container"><h1>${title}</h1></div></div>
+    <section class="section"><div class="container">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+        <a class="chip ${!activeCat ? "active" : ""}" href="#/category">All</a>
+        ${cats.map((c) => `<a class="chip ${activeCat === c.name ? "active" : ""}" href="#/category?cat=${encodeURIComponent(c.name)}">${c.icon} ${escapeHtml(c.name)}</a>`).join("")}
+      </div>
+      <div class="product-grid">${medicines.length ? medicines.map(productCardHtml).join("") : `<div class="empty-state" style="grid-column:1/-1;"><div class="big-emoji">\u{1F50D}</div>No medicines found.</div>`}</div>
+    </div></section>
+  `;
+}
+viewCategory.after = function () { wireAddToCart(document); };
+
+function viewCart() {
+  const me = apiMe();
+  if (!me.user) return `<div class="page-header"><div class="container"><h1>Your Cart</h1></div></div><section class="section"><div class="container"><div class="empty-state"><div class="big-emoji">\u{1F512}</div>Please <a href="#/login" style="color:var(--primary-dark);font-weight:700;">login</a> to view your cart.</div></div></section>`;
+  if (me.user.role !== "customer") return `<div class="page-header"><div class="container"><h1>Your Cart</h1></div></div><section class="section"><div class="container"><div class="empty-state"><div class="big-emoji">\u{1F3EA}</div>Chemist accounts don't use the shopping cart.</div></div></section>`;
+  return `
+    <div class="page-header"><div class="container"><h1>Your Cart</h1></div></div>
+    <section class="section"><div class="container">
+      <div class="split-grid">
+        <div class="panel" id="cart-panel"></div>
+        <div class="side-col">
+          <div class="panel"><div class="panel-title"><h3>Order Summary</h3></div><div id="summary-block"></div></div>
+          <div class="panel"><div class="panel-title"><h3>Delivery Address</h3></div><div id="address-block"></div></div>
+          <button class="btn btn-primary btn-block" id="place-order-btn">Place Order</button>
+        </div>
+      </div>
+    </div></section>
+  `;
+}
+viewCart.after = function () {
+  const me = apiMe();
+  if (!me.user || me.user.role !== "customer") return;
+  renderCartPanel();
+  renderAddressBlock();
+  const placeBtn = document.getElementById("place-order-btn");
+  if (placeBtn) placeBtn.addEventListener("click", placeOrderFlow);
+};
+
+function renderCartPanel() {
+  const panel = document.getElementById("cart-panel");
+  const cart = apiCart();
+  const pendingRx = localStorage.getItem("instarx_standalone_pending_rx");
+  if (!cart.items.length && !pendingRx) {
+    panel.innerHTML = `<div class="empty-state"><div class="big-emoji">\u{1F6D2}</div>Your cart is empty.<br><a href="#/category" class="btn btn-primary" style="margin-top:14px;">Browse Medicines</a></div>`;
+    const pb = document.getElementById("place-order-btn"); if (pb) pb.disabled = true;
+  } else {
+    let html = cart.items.map((line) => `
+      <div class="cart-line" data-id="${line.medicine.id}">
+        <div class="thumb">${line.medicine.icon}</div>
+        <div class="info"><div style="font-weight:700;font-size:14px;">${escapeHtml(line.medicine.name)}</div><div style="font-size:12px;color:var(--text-muted);">${currency(line.medicine.price)} each</div></div>
+        <div class="qty-control"><button data-action="dec">&minus;</button><span>${line.qty}</span><button data-action="inc">+</button></div>
+        <div style="font-weight:700;width:70px;text-align:right;">${currency(line.subtotal)}</div>
+        <button class="btn btn-ghost btn-sm" data-action="remove">&#10005;</button>
+      </div>`).join("");
+    if (pendingRx) html += `<div class="cart-line"><div class="thumb">\u{1F4C4}</div><div class="info"><div style="font-weight:700;font-size:14px;">Uploaded prescription attached</div><div style="font-size:12px;color:var(--text-muted);">Chemist will confirm items &amp; price</div></div><button class="btn btn-ghost btn-sm" id="remove-rx">&#10005;</button></div>`;
+    panel.innerHTML = html;
+    panel.querySelectorAll(".cart-line[data-id]").forEach((row) => {
+      const id = Number(row.dataset.id);
+      row.querySelector('[data-action="inc"]').addEventListener("click", () => { apiAddToCart(id, 1); renderCartPanel(); renderNavActions(); });
+      row.querySelector('[data-action="dec"]').addEventListener("click", () => { apiAddToCart(id, -1); renderCartPanel(); renderNavActions(); });
+      row.querySelector('[data-action="remove"]').addEventListener("click", () => { apiRemoveFromCart(id); renderCartPanel(); renderNavActions(); });
+    });
+    const removeRx = document.getElementById("remove-rx");
+    if (removeRx) removeRx.addEventListener("click", () => { localStorage.removeItem("instarx_standalone_pending_rx"); renderCartPanel(); });
+  }
+  renderSummary();
+}
+function renderSummary() {
+  const el = document.getElementById("summary-block");
+  const cart = apiCart();
+  const total = cart.total || 0;
+  const deliveryNote = total >= 199 || total === 0 ? "FREE" : currency(29);
+  el.innerHTML = `
+    <div class="summary-row"><span>Item Total</span><span>${currency(total)}</span></div>
+    <div class="summary-row"><span>Delivery</span><span>${deliveryNote}</span></div>
+    <div class="summary-row total"><span>To Pay</span><span>${currency(total)}</span></div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Chemist may add a personal transport charge when your order goes out for delivery.</div>
+  `;
+}
+function renderAddressBlock() {
+  const el = document.getElementById("address-block");
+  const addr = getSavedAddress();
+  el.innerHTML = `
+    ${addr ? `<div style="font-size:13.5px;margin-bottom:10px;">\u{1F4CD} ${escapeHtml(addr.label)}</div>` : `<div class="form-note">No address set yet.</div>`}
+    <button class="btn btn-outline btn-sm btn-block" id="redetect-btn">\u{1F4CD} Use My Current Location</button>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin:10px 0 6px;">or enter it manually</div>
+    <div style="display:flex;gap:6px;">
+      <input type="text" id="manual-address-input" placeholder="Street, area, city" style="flex:1;padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;">
+      <button class="btn btn-primary btn-sm" id="manual-address-btn">Set</button>
+    </div>
+  `;
+  document.getElementById("redetect-btn").addEventListener("click", async () => {
+    try { const addr = await detectLocation(); saveAddress(addr); renderAddressBlock(); toast("Address updated"); }
+    catch (e) { toast("Location access denied — enter your address manually below"); }
+  });
+  document.getElementById("manual-address-btn").addEventListener("click", async () => {
+    const input = document.getElementById("manual-address-input");
+    const query = input.value.trim();
+    if (!query) { toast("Type an address first"); return; }
+    try { const addr = await geocodeAddress(query); saveAddress(addr); renderAddressBlock(); toast("Address set"); }
+    catch (e) { toast(e.message); }
+  });
+}
+async function placeOrderFlow() {
+  const addr = getSavedAddress();
+  if (!addr) { toast("Please set your delivery location first"); return; }
+  const btn = document.getElementById("place-order-btn");
+  btn.disabled = true; btn.textContent = "Placing order...";
+  const prescription_file = localStorage.getItem("instarx_standalone_pending_rx") || null;
+  const res = apiPlaceOrder({ address: addr, prescription_file });
+  if (res.error) { toast(res.error); btn.disabled = false; btn.textContent = "Place Order"; return; }
+  localStorage.removeItem("instarx_standalone_pending_rx");
+  toast("Order placed! Finding a nearby chemist...");
+  go("track", { order: res.order.id });
+}
+
+function viewLogin(params) {
+  return `
+    <div class="auth-shell"><div class="auth-card">
+      <div class="role-toggle" id="mode-toggle"><button type="button" data-mode="login" class="active">Login</button><button type="button" data-mode="signup">Sign Up</button></div>
+      <div id="role-toggle-wrap" class="role-toggle" style="display:none;"><button type="button" data-role="customer" class="active">I'm a Customer</button><button type="button" data-role="chemist">I'm a Chemist</button></div>
+      <h2 id="form-title">Welcome back</h2>
+      <div id="form-error" class="form-error" style="display:none;"></div>
+      <div class="form-note">Demo accounts (password <b>demo1234</b>): medrush.chemist.andheri@instarx.local, apollo.pharmacy.bandra@instarx.local</div>
+      <form id="auth-form">
+        <div class="field signup-only" style="display:none;"><label>Full Name / Shop Owner Name</label><input type="text" name="name" placeholder="e.g. Rohit Kumar"></div>
+        <div class="field"><label>Email</label><input type="email" name="email" required placeholder="you@example.com"></div>
+        <div class="field signup-only" style="display:none;"><label>Phone</label><input type="tel" name="phone" placeholder="10-digit mobile number"></div>
+        <div class="field"><label>Password</label><input type="password" name="password" required minlength="4" placeholder="At least 4 characters"></div>
+        <div id="chemist-fields" style="display:none;">
+          <div class="form-note">Chemist accounts need shop details — orders from nearby customers will be routed to you once you're online.</div>
+          <div class="field"><label>Shop Name</label><input type="text" name="shop_name" placeholder="e.g. Priya's Medical Store"></div>
+          <div class="field"><label>Drug License Number</label><input type="text" name="license_no" placeholder="e.g. MH-PH-1234"></div>
+          <div class="field"><label>Shop Address</label><input type="text" name="address" placeholder="Street, area, city"></div>
+          <div class="field"><button type="button" id="use-location-btn" class="btn btn-outline btn-sm">\u{1F4CD} Use My Current Location</button><div id="location-status" style="font-size:12.5px;color:var(--text-muted);margin-top:6px;"></div></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Login</button>
+      </form>
+      <div class="switch-link" id="switch-wrap"><span id="switch-text">New to InstaRX? <a href="#" id="switch-link">Create an account</a></span></div>
+    </div></div>
+  `;
+}
+viewLogin.after = function (params) {
+  const me = apiMe();
+  if (me.user) { go(me.user.role === "chemist" ? "chemist" : "home"); return; }
+  let mode = "login", role = "customer", chosenLocation = null;
+
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll("#mode-toggle button").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+    document.getElementById("role-toggle-wrap").style.display = m === "signup" ? "flex" : "none";
+    document.querySelectorAll(".signup-only").forEach((el) => (el.style.display = m === "signup" ? "block" : "none"));
+    document.getElementById("chemist-fields").style.display = m === "signup" && role === "chemist" ? "block" : "none";
+    document.getElementById("form-title").textContent = m === "login" ? "Welcome back" : "Create your account";
+    document.getElementById("submit-btn").textContent = m === "login" ? "Login" : "Create Account";
+    document.getElementById("switch-wrap").innerHTML = m === "login" ? `New to InstaRX? <a href="#" id="switch-link">Create an account</a>` : `Already have an account? <a href="#" id="switch-link">Login</a>`;
+    document.getElementById("switch-link").addEventListener("click", (e) => { e.preventDefault(); setMode(mode === "login" ? "signup" : "login"); });
+    document.getElementById("form-error").style.display = "none";
+  }
+  function setRole(r) {
+    role = r;
+    document.querySelectorAll("#role-toggle-wrap button").forEach((b) => b.classList.toggle("active", b.dataset.role === r));
+    document.getElementById("chemist-fields").style.display = r === "chemist" ? "block" : "none";
+  }
+  document.querySelectorAll("#mode-toggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  document.querySelectorAll("#role-toggle-wrap button").forEach((b) => b.addEventListener("click", () => setRole(b.dataset.role)));
+  document.getElementById("switch-link").addEventListener("click", (e) => { e.preventDefault(); setMode(mode === "login" ? "signup" : "login"); });
+  document.getElementById("use-location-btn").addEventListener("click", async () => {
+    const status = document.getElementById("location-status");
+    status.textContent = "Detecting your location...";
+    try { const loc = await detectLocation(); chosenLocation = loc; status.textContent = `\u{1F4CD} ${loc.label}`; const addrInput = document.querySelector('input[name="address"]'); if (!addrInput.value) addrInput.value = loc.label; }
+    catch (e) { status.textContent = "Couldn't detect location — enter your address manually."; }
+  });
+  document.getElementById("auth-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    document.getElementById("form-error").style.display = "none";
+    const fd = new FormData(e.target);
+    let res;
+    if (mode === "login") res = apiLogin(fd.get("email"), fd.get("password"));
+    else {
+      const payload = { role, name: fd.get("name"), email: fd.get("email"), password: fd.get("password"), phone: fd.get("phone") };
+      if (role === "chemist") { payload.shop_name = fd.get("shop_name"); payload.license_no = fd.get("license_no"); payload.address = fd.get("address"); if (chosenLocation) { payload.lat = chosenLocation.lat; payload.lng = chosenLocation.lng; } }
+      res = apiSignup(payload);
+    }
+    if (res.error) { const el = document.getElementById("form-error"); el.textContent = res.error; el.style.display = "block"; return; }
+    toast(`Welcome${mode === "signup" ? " to InstaRX" : " back"}, ${res.user.name.split(" ")[0]}!`);
+    go(res.user.role === "chemist" ? "chemist" : "home");
+  });
+  if (params.get("mode") === "signup") setMode("signup");
+  if (params.get("role") === "chemist") { setMode("signup"); setRole("chemist"); }
+};
+
+function viewUpload() {
+  return `
+    <div class="auth-shell"><div class="auth-card" style="max-width:480px;">
+      <h2>Upload Prescription</h2>
+      <p style="color:var(--text-muted);font-size:13.5px;margin-top:-8px;">A nearby chemist will review it, confirm items and price, then accept your order.</p>
+      <div id="upload-error" class="form-error" style="display:none;"></div>
+      <div id="upload-success" class="form-note" style="display:none;"></div>
+      <div class="field"><label>Prescription file (image, under 2MB)</label><input type="file" id="rx-file" accept="image/*"></div>
+      <button class="btn btn-primary btn-block" id="upload-btn">Upload &amp; Continue to Cart</button>
+    </div></div>
+  `;
+}
+viewUpload.after = function () {
+  document.getElementById("upload-btn").addEventListener("click", () => {
+    const errorEl = document.getElementById("upload-error"), successEl = document.getElementById("upload-success");
+    errorEl.style.display = "none"; successEl.style.display = "none";
+    const me = apiMe();
+    if (!me.user) { toast("Please login first"); setTimeout(() => go("login"), 700); return; }
+    const fileInput = document.getElementById("rx-file");
+    if (!fileInput.files.length) { errorEl.textContent = "Please choose a file first."; errorEl.style.display = "block"; return; }
+    const file = fileInput.files[0];
+    if (file.size > 2 * 1024 * 1024) { errorEl.textContent = "File is too large for this offline demo — please choose one under 2MB."; errorEl.style.display = "block"; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      localStorage.setItem("instarx_standalone_pending_rx", reader.result);
+      successEl.textContent = "Uploaded! Redirecting to your cart...";
+      successEl.style.display = "block";
+      setTimeout(() => go("cart"), 800);
+    };
+    reader.onerror = () => { errorEl.textContent = "Couldn't read that file."; errorEl.style.display = "block"; };
+    reader.readAsDataURL(file);
+  });
+};
+
+function viewChemist() {
+  const me = apiMe();
+  if (!me.user || me.user.role !== "chemist") return `<div class="page-header"><div class="container"><h1>Chemist Dashboard</h1></div></div><section class="section"><div class="container"><div class="empty-state"><div class="big-emoji">\u{1F512}</div>Please <a href="#/login?role=chemist" style="color:var(--primary-dark);font-weight:700;">login as a chemist</a> to view this dashboard.</div></div></section>`;
+  return `
+    <div class="page-header"><div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div><h1 id="shop-name">${escapeHtml(me.chemist.shop_name)}</h1><div style="font-size:13px;color:var(--text-muted);">${escapeHtml(me.chemist.address || "No address on file")}</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="online-toggle" ${me.chemist.online ? "checked" : ""}><span class="track"></span><span id="online-label" style="font-weight:700;font-size:13.5px;color:${me.chemist.online ? "var(--accent-green)" : "var(--text-muted)"};">${me.chemist.online ? "Online" : "Offline"}</span></label>
+    </div></div>
+    <section class="section"><div class="container">
+      <div class="split-grid">
+        <div><div class="section-title"><h2>Incoming Order Requests</h2></div><div id="incoming-orders"></div></div>
+        <div><div class="section-title"><h2>My Active &amp; Past Orders</h2></div><div id="my-orders"></div></div>
+      </div>
+    </div></section>
+  `;
+}
+viewChemist.after = function () {
+  const me = apiMe();
+  if (!me.user || me.user.role !== "chemist") return;
+  const toggle = document.getElementById("online-toggle");
+  toggle.addEventListener("change", () => {
+    apiChemistOnline(toggle.checked);
+    document.getElementById("online-label").textContent = toggle.checked ? "Online" : "Offline";
+    document.getElementById("online-label").style.color = toggle.checked ? "var(--accent-green)" : "var(--text-muted)";
+    toast(toggle.checked ? "You're online — you'll now receive nearby orders" : "You're offline");
+    refreshChemist();
+  });
+  refreshChemist();
+};
+function refreshChemist() { loadIncoming(); loadMineChemist(); }
+function loadIncoming() {
+  const el = document.getElementById("incoming-orders");
+  const { orders } = apiChemistIncoming();
+  if (!orders.length) { el.innerHTML = `<div class="empty-state"><div class="big-emoji">\u{1F4ED}</div>No pending order requests right now.</div>`; return; }
+  el.innerHTML = orders.map((o) => `
+    <div class="order-card">
+      <div class="top-row"><b>Order #${o.id}</b><span class="badge pending">${STATUS_LABELS[o.status]}</span></div>
+      <div style="font-size:13px;">${escapeHtml(o.customer_name)} &middot; ${o.address && o.address.label ? escapeHtml(truncate(o.address.label, 50)) : "Address unavailable"}</div>
+      ${o.items.length ? `<ul>${o.items.map((i) => `<li>${escapeHtml(i.name)} &times; ${i.qty}</li>`).join("")}</ul>` : `<div style="font-size:13px;color:var(--text-muted);margin:8px 0;">\u{1F4C4} Prescription order &mdash; review attached file before pricing.</div>`}
+      ${o.prescription_file ? `<a href="${o.prescription_file}" target="_blank" style="font-size:12.5px;color:var(--primary-dark);font-weight:700;">View Prescription &rarr;</a>` : ""}
+      <div style="font-weight:700;margin-top:6px;">Order value: ${currency(o.total)}</div>
+      <div class="order-actions"><button class="btn btn-primary btn-sm accept-btn" data-id="${o.id}">Accept Order</button></div>
+    </div>`).join("");
+  el.querySelectorAll(".accept-btn").forEach((btn) => btn.addEventListener("click", () => {
+    const res = apiAcceptOrder(Number(btn.dataset.id));
+    if (res.error) toast(res.error); else toast("Order accepted — start packing it!");
+    refreshChemist();
+  }));
+}
+function loadMineChemist() {
+  const el = document.getElementById("my-orders");
+  const { orders } = apiChemistMine();
+  if (!orders.length) { el.innerHTML = `<div class="empty-state"><div class="big-emoji">\u{1F9FE}</div>You haven't accepted any orders yet.</div>`; return; }
+  el.innerHTML = orders.map((o) => {
+    const next = { accepted: "packed", packed: "out_for_delivery", out_for_delivery: "delivered" }[o.status];
+    let actionHtml = "";
+    if (next === "out_for_delivery") actionHtml = `<div class="field" style="margin:10px 0 6px;"><label style="font-size:12px;">Personal transport charge (₹)</label><input type="number" min="0" step="1" placeholder="e.g. 30" class="charge-input" data-id="${o.id}" style="max-width:140px;"></div><button class="btn btn-secondary btn-sm advance-btn" data-id="${o.id}">Mark Out for Delivery</button>`;
+    else if (next) actionHtml = `<button class="btn btn-secondary btn-sm advance-btn" data-id="${o.id}">Mark ${STATUS_LABELS[next]}</button>`;
+    return `<div class="order-card">
+      <div class="top-row"><b>Order #${o.id}</b><span class="badge ${o.status}">${STATUS_LABELS[o.status]}</span></div>
+      <div style="font-size:13px;">${escapeHtml(o.customer_name)}</div>
+      ${o.items.length ? `<ul>${o.items.map((i) => `<li>${escapeHtml(i.name)} &times; ${i.qty}</li>`).join("")}</ul>` : ""}
+      <div style="font-weight:700;">${currency(o.total)}${o.delivery_charge ? ` + ${currency(o.delivery_charge)} delivery` : ""}</div>
+      <div class="order-actions">${actionHtml}</div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".advance-btn").forEach((btn) => btn.addEventListener("click", () => {
+    const chargeInput = el.querySelector(`.charge-input[data-id="${btn.dataset.id}"]`);
+    const charge = chargeInput ? Number(chargeInput.value || 0) : null;
+    const res = apiUpdateStatus(Number(btn.dataset.id), charge);
+    if (res.error) toast(res.error); else toast("Order status updated");
+    refreshChemist();
+  }));
+}
+
+function viewTrack(params) {
+  const me = apiMe();
+  if (!me.user) return `<div class="page-header"><div class="container"><h1>Track Order</h1></div></div><section class="section"><div class="container"><div class="empty-state"><div class="big-emoji">\u{1F512}</div>Please <a href="#/login" style="color:var(--primary-dark);font-weight:700;">login</a> to track your orders.</div></div></section>`;
+  if (me.user.role !== "customer") return `<div class="page-header"><div class="container"><h1>Track Order</h1></div></div><section class="section"><div class="container"><div class="empty-state">Chemist accounts should use the <a href="#/chemist" style="color:var(--primary-dark);font-weight:700;">dashboard</a> to manage orders.</div></div></section>`;
+  return `<div class="page-header"><div class="container"><h1>Track Order</h1></div></div><section class="section"><div class="container"><div id="orders-list"></div></div></section>`;
+}
+viewTrack.after = function (params) {
+  const me = apiMe();
+  if (!me.user || me.user.role !== "customer") return;
+  const highlightId = Number(params.get("order")) || null;
+  const el = document.getElementById("orders-list");
+  const { orders } = apiMyOrders();
+  if (!orders.length) { el.innerHTML = `<div class="empty-state"><div class="big-emoji">\u{1F4E6}</div>You haven't placed any orders yet.<br><a href="#/category" class="btn btn-primary" style="margin-top:14px;">Browse Medicines</a></div>`; return; }
+  el.innerHTML = orders.map((o) => `
+    <div class="order-card" style="${highlightId === o.id ? "border-color:var(--primary);" : ""}">
+      <div class="top-row"><b>Order #${o.id}</b><span class="badge ${o.status}">${STATUS_LABELS[o.status]}</span></div>
+      <div class="stepper">${stepperHtml(o.status)}</div>
+      <div style="font-size:13px;color:var(--text-muted);">${o.chemist_name ? `Being handled by <b>${escapeHtml(o.chemist_name)}</b>` : "Waiting for a nearby chemist to accept..."}</div>
+      ${o.items.length ? `<ul>${o.items.map((i) => `<li>${escapeHtml(i.name)} &times; ${i.qty}</li>`).join("")}</ul>` : `<div style="font-size:13px;color:var(--text-muted);margin:6px 0;">\u{1F4C4} Prescription order</div>`}
+      <div style="font-weight:700;">${currency(o.total)}${o.delivery_charge ? ` + ${currency(o.delivery_charge)} delivery` : ""}</div>
+    </div>`).join("");
+};
+</script>
+</body>
+</html>

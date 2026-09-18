@@ -1,0 +1,162 @@
+========================================================
+ InstaRX - Local Medicine Delivery Website (University Project)
+========================================================
+
+WHAT IS THIS?
+-------------
+InstaRX is a prototype online medicine delivery website. A customer
+places an order on the website, and the order is sent directly to a
+real, nearby partner chemist shop instead of a warehouse. The chemist
+accepts the order, packs it, and delivers it themselves (by bike,
+scooter, etc.), confirming the handover with a One-Time Password (OTP)
+- similar to how apps like Blinkit confirm delivery.
+
+The goal of the project is to help small, local chemist shops get
+online visibility and new customers without needing their own website,
+while giving patients fast medicine delivery.
+
+This is a full working prototype: real signup/login, a live product
+catalog with real photos, a shopping cart, order placement, a chemist
+dashboard, and live order tracking with OTP verification. It runs on
+your own computer - nothing is uploaded to the internet, and no real
+payments or real medicines are involved.
+
+
+WHAT'S INCLUDED IN THIS FOLDER
+-------------------------------
+  start.bat            <- double-click this to run everything
+  requirements.txt     <- the one dependency needed (Flask)
+  server\               the backend (Python/Flask)
+  static\               the website itself (HTML/CSS/JS)
+  HOW_TO_RUN.txt        this file
+
+
+HOW TO RUN IT ON ANY WINDOWS PC
+--------------------------------
+Step 1: Make sure Python is installed
+  - Open a Command Prompt and type:  python --version
+  - If you see a version number (e.g. "Python 3.11.4"), skip to Step 2.
+  - If it says "not recognized", install Python from:
+        https://www.python.org/downloads/
+    During installation, make sure you TICK THE BOX that says
+    "Add Python to PATH" - this is important, don't skip it.
+
+Step 2: Copy this whole folder onto your PC
+  - Copy the entire "instarx" folder (all of it) to your Desktop or
+    anywhere convenient. Keep all the files and folders together -
+    don't move start.bat out on its own.
+
+Step 3: Run it
+  - Double-click "start.bat"
+  - The first time you run it, it will automatically install Flask
+    (the only thing this project needs) - this takes a few seconds
+    and only happens once.
+  - A black console window will open and stay open (this is your
+    server running - don't close it while you're using the site).
+  - Your browser will open automatically to the website. If it
+    doesn't, open any browser and go to:
+        http://localhost:5000
+
+Step 4: Create your own accounts
+  - There are NO pre-made demo accounts - everyone signs up for real
+    from the site's own "Sign Up" screen.
+  - Sign up once as a "Customer" (use the "I'm a Customer" tab) to
+    browse and order medicines.
+  - Sign up again as a "Chemist" (use the "I'm a Chemist" tab, with a
+    different email address) to see the chemist side. When signing up
+    as a chemist, you'll be asked for a shop name and address/location
+    - this is what lets the matching logic find "nearby" chemists.
+  - To test the full order flow by yourself:
+      1. Log in as your Customer account, add items to the cart, click
+         "Proceed to Payment", choose UPI (simulated) or Cash on
+         Delivery, and complete the checkout.
+      2. Log out, then log in as your Chemist account. Toggle
+         "Online", then Accept the incoming order, mark it Packed,
+         then Out for Delivery (enter a delivery partner name).
+      3. Log out, log back in as the Customer, and open "Track Order"
+         to see the live tracking screen with the OTP and a small map
+         showing a simulated delivery-partner location.
+      4. Log back in as the Chemist, enter that OTP, and mark the
+         order Delivered.
+  - Since only one account can be logged in per browser at a time,
+    the easiest way to test both sides at once is to open the
+    Customer account in a normal browser window and the Chemist
+    account in an Incognito/Private window (or a second browser).
+
+Step 5: See the live data being stored
+  - Open http://localhost:5000/admin.html in your browser at any time
+    to see every account, chemist shop, and order currently stored on
+    the server, updated live (it refreshes itself every 5 seconds).
+  - This is reading directly from server\data.json - a simple local
+    database file. Data stays there indefinitely (well past 24 hours)
+    as long as nobody deletes that file - it survives closing the
+    browser, restarting the server, or restarting your PC.
+
+Step 6: Stop the server
+  - Close the black console window (or press Ctrl+C inside it).
+
+
+SHARING WITH COLLEAGUES ON THE SAME WIFI (live demo, one PC running)
+----------------------------------------------------------------------
+If you want to run it on YOUR PC and have colleagues view it on THEIR
+OWN devices at the same time (without each of them installing anything):
+  1. Run start.bat on your PC as usual.
+  2. The console window will print two links:
+       On this PC:      http://localhost:5000
+       On your network:  http://<your IP address>:5000
+  3. Share the second link with colleagues who are on the SAME WiFi
+     network as you. They open it in their own browser - no install
+     needed on their side.
+  4. This only works while your PC and server are running, and only
+     for people on the same network (not over the internet).
+
+For colleagues to run their OWN independent copy on their OWN PC
+(recommended for testing/grading), just have them follow the
+"HOW TO RUN IT ON ANY WINDOWS PC" steps above with their own copy of
+this folder.
+
+
+TROUBLESHOOTING
+----------------
+"python is not recognized"
+  -> Python isn't installed, or wasn't added to PATH. Reinstall it
+     from python.org and tick "Add Python to PATH".
+
+"Port 5000 is already in use" / site won't load
+  -> Another program (or a previous run of this same server) is using
+     port 5000. Close any old "InstaRX Server" console windows, then
+     try again.
+
+Windows Firewall popup appears
+  -> Click "Allow access". This only lets the server be reached by
+     other devices on your own network - it does not open anything to
+     the internet.
+
+Product images don't load
+  -> The site fetches real medicine photos from a free public image
+     API (Openverse) the first time it runs - this needs an internet
+     connection once. After that they're cached locally in
+     server\images_cache.json and load fine even offline.
+
+Location/GPS button doesn't work
+  -> Browsers only allow location access on "localhost" or secure
+     sites. If it's blocked, just type an address manually in the
+     "or enter it manually" box on the Cart page - it works the same.
+
+
+NOTES
+-----
+- This is a university project prototype, not a real pharmacy service.
+- Payment at checkout (UPI / Cash on Delivery) is a SIMULATED demo
+  flow only. No real money moves, no bank or UPI network is contacted,
+  and the "transaction ID" shown is generated locally, not by any real
+  payment provider. A genuine UPI integration would require a
+  registered payment aggregator account (business KYC, bank tie-up) -
+  well beyond the scope of a local student project, and not something
+  that can be safely wired up without those real-world credentials.
+- The delivery-partner location shown on the tracking map is
+  SIMULATED (a marker interpolated between the shop and the delivery
+  address over a fixed demo time), not real GPS from an actual rider.
+- Data (accounts, orders) is stored locally in server\data.json on
+  whichever PC is running the server - it is not shared or synced
+  between different colleagues' copies of the project.
