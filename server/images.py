@@ -1,19 +1,22 @@
-"""Fetches real, freely-licensed product photos from Openverse (api.openverse.org) —
-a free, keyless search API over Creative Commons / public-domain images — and
-downloads the actual image bytes ONCE into static/media/, so the site serves
-them from our own server afterwards instead of hotlinking Openverse on every
-page load (hotlinking was unreliable: dozens of simultaneous cross-origin
-requests to the same external host left many thumbnails stuck pending).
+"""Fetches real, freely-licensed medicine photography from Wikimedia Commons
+and caches the actual image bytes into static/media/ so the site serves them
+from our own server.
 
-No free live API exists that returns exact-brand product photography (Crocin,
-Dolo, etc.) or 3D renders, so this fetches representative real photos per
-category instead (real tablets, real thermometers, real BP monitors...).
+Why Wikimedia rather than a stock API: Commons is public domain / CC and needs
+no API key, and it actually holds real pharmaceutical packshots (blister packs,
+syrup bottles, medical devices). Stock photo APIs return lifestyle photography,
+not product shots.
+
+Honest limitation: Commons has no photo of a specific Indian brand like
+"Dolo 650". We fetch representative real photography per product category and
+let the frontend fall back to a drawn SVG illustration where nothing suitable
+exists. Nothing here is AI-generated.
 """
 import json
 import os
 import re
-import urllib.request
 import urllib.parse
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SERVER_DIR = os.path.dirname(__file__)
@@ -21,51 +24,94 @@ STATIC_DIR = os.path.join(os.path.dirname(SERVER_DIR), "static")
 MEDIA_DIR = os.path.join(STATIC_DIR, "media")
 CACHE_FILE = os.path.join(SERVER_DIR, "images_cache.json")
 
+API = "https://commons.wikimedia.org/w/api.php"
+UA = "InstaRX-University-Project/1.0 (educational project; contact via course staff)"
+
+# Several queries per category - Commons results are uneven, so we cast wide
+# and filter hard afterwards.
 CATEGORY_QUERIES = {
-    "Prescription Medicines": "pills tablets medicine",
-    "OTC Medicines": "medicine bottle pharmacy",
-    "Healthcare Essentials": "first aid bandage",
-    "Personal Care": "toiletries bottle",
-    "Baby Care": "baby powder bottle",
-    "Diabetes Care": "glucose meter",
-    "Vitamins & Supplements": "vitamin supplement capsules",
-    "Medical Devices": "medical device",
+    "Prescription Medicines": ["blister pack tablets", "pharmaceutical tablets packaging", "medicine strip pills"],
+    "OTC Medicines": ["medicine bottle pharmacy", "cough syrup bottle", "over the counter medicine box"],
+    "Healthcare Essentials": ["first aid supplies", "antiseptic bottle", "adhesive bandage box"],
+    "Personal Care": ["soap bar packaging", "shampoo bottle", "toothpaste tube"],
+    "Baby Care": ["baby powder bottle", "baby lotion bottle", "infant formula tin"],
+    "Diabetes Care": ["blood glucose meter", "glucometer test strips", "insulin syringe"],
+    "Vitamins & Supplements": ["vitamin supplement bottle", "multivitamin tablets", "dietary supplement capsules"],
+    "Medical Devices": ["blood pressure monitor", "digital thermometer medical", "pulse oximeter"],
 }
 
-RESULTS_PER_CATEGORY = 14
-SEARCH_TIMEOUT_SECONDS = 8
-DOWNLOAD_TIMEOUT_SECONDS = 6
+PER_QUERY = 12
+TARGET_PER_CATEGORY = 10
+TIMEOUT = 10
 RETRIES = 2
-MAX_WORKERS = 8
+WORKERS = 6
+
+# Commons is full of chemical structure diagrams and molecule renders - those
+# look nothing like a product, so drop them by filename.
+REJECT = re.compile(
+    r"(structure|formula|skeletal|molecul|chemical|2d|3d[-_ ]?model|ball[-_ ]and[-_ ]stick"
+    r"|spacefill|synthesis|crystal|svg|diagram|chart|graph|logo|map|poster)",
+    re.I,
+)
+ACCEPT_EXT = (".jpg", ".jpeg", ".png")
 
 
-def _slug(category):
-    return re.sub(r"[^a-z0-9]+", "-", category.lower()).strip("-")
+def _slug(text):
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-def _search_category_images(query):
-    params = urllib.parse.urlencode({"q": query, "page_size": RESULTS_PER_CATEGORY, "mature": "false"})
-    url = f"https://api.openverse.org/v1/images/?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": "InstaRX-University-Project/1.0"})
-    last_error = None
+def _api_get(params):
+    url = API + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    last = None
     for _ in range(RETRIES):
         try:
-            with urllib.request.urlopen(req, timeout=SEARCH_TIMEOUT_SECONDS) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            return [r["thumbnail"] for r in data.get("results", []) if r.get("thumbnail")]
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                return json.loads(r.read().decode("utf-8"))
         except Exception as e:
-            last_error = e
-    raise last_error
+            last = e
+    raise last
 
 
-def _download_one(url, dest_path):
-    req = urllib.request.Request(url, headers={"User-Agent": "InstaRX-University-Project/1.0"})
+def _search(query):
+    """Return candidate (title, thumb_url) pairs for one search phrase."""
+    data = _api_get({
+        "action": "query",
+        "generator": "search",
+        "gsrsearch": query,
+        "gsrnamespace": 6,          # File: namespace
+        "gsrlimit": PER_QUERY,
+        "prop": "imageinfo",
+        "iiprop": "url|mime",
+        "iiurlwidth": 500,          # server-side thumbnail, keeps files small
+        "format": "json",
+    })
+    out = []
+    for page in (data.get("query", {}).get("pages", {}) or {}).values():
+        title = page.get("title", "")
+        info = (page.get("imageinfo") or [{}])[0]
+        thumb = info.get("thumburl")
+        mime = info.get("mime", "")
+        if not thumb or not mime.startswith("image/"):
+            continue
+        if REJECT.search(title):
+            continue
+        if not any(thumb.lower().split("?")[0].endswith(e) for e in ACCEPT_EXT):
+            continue
+        out.append((title, thumb))
+    return out
+
+
+def _download(url, dest):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
     for _ in range(RETRIES):
         try:
-            with urllib.request.urlopen(req, timeout=DOWNLOAD_TIMEOUT_SECONDS) as resp:
-                content = resp.read()
-            with open(dest_path, "wb") as f:
-                f.write(content)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                blob = r.read()
+            if len(blob) < 2000:        # too small to be a usable photo
+                return False
+            with open(dest, "wb") as f:
+                f.write(blob)
             return True
         except Exception:
             continue
@@ -75,30 +121,41 @@ def _download_one(url, dest_path):
 def build_cache():
     os.makedirs(MEDIA_DIR, exist_ok=True)
     cache = {}
-    for category, query in CATEGORY_QUERIES.items():
+
+    for category, queries in CATEGORY_QUERIES.items():
         slug = _slug(category)
         cat_dir = os.path.join(MEDIA_DIR, slug)
         os.makedirs(cat_dir, exist_ok=True)
-        try:
-            urls = _search_category_images(query)
-        except Exception as e:
-            print(f"[images] Couldn't search photos for '{category}': {e}")
-            cache[category] = []
-            continue
 
-        local_paths = [None] * len(urls)
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-            future_to_index = {}
-            for i, url in enumerate(urls):
+        # gather candidates across all queries, de-duplicated by title
+        seen, candidates = set(), []
+        for q in queries:
+            try:
+                for title, thumb in _search(q):
+                    if title not in seen:
+                        seen.add(title)
+                        candidates.append(thumb)
+            except Exception as e:
+                print(f"[images] search failed '{q}': {e}")
+        candidates = candidates[: TARGET_PER_CATEGORY * 2]
+
+        saved = []
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            futures = {}
+            for i, url in enumerate(candidates):
                 dest = os.path.join(cat_dir, f"{i}.jpg")
-                future_to_index[pool.submit(_download_one, url, dest)] = (i, dest)
-            for future in as_completed(future_to_index):
-                i, dest = future_to_index[future]
-                if future.result():
-                    local_paths[i] = f"/media/{slug}/{i}.jpg"
+                futures[pool.submit(_download, url, dest)] = (i, dest)
+            for fut in as_completed(futures):
+                i, dest = futures[fut]
+                try:
+                    if fut.result():
+                        saved.append((i, f"/media/{slug}/{i}.jpg"))
+                except Exception:
+                    pass
 
-        cache[category] = [p for p in local_paths if p]
-        print(f"[images] {category}: downloaded {len(cache[category])}/{len(urls)} photos")
+        saved.sort()
+        cache[category] = [p for _, p in saved][:TARGET_PER_CATEGORY]
+        print(f"[images] {category}: {len(cache[category])} photos")
 
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2)
@@ -110,13 +167,20 @@ def get_image_cache():
         try:
             with open(CACHE_FILE, "r", encoding="utf-8") as f:
                 cache = json.load(f)
-            # sanity-check the referenced files still exist locally; rebuild if not
-            if all(os.path.exists(os.path.join(STATIC_DIR, p.lstrip("/"))) for urls in cache.values() for p in urls):
+            ok = all(
+                os.path.exists(os.path.join(STATIC_DIR, p.lstrip("/")))
+                for paths in cache.values() for p in paths
+            )
+            if ok:
                 return cache
         except Exception:
             pass
-    print("[images] Downloading real product photos from Openverse (one-time, needs internet)...")
-    return build_cache()
+    print("[images] Fetching medicine photos from Wikimedia Commons (one-time)...")
+    try:
+        return build_cache()
+    except Exception as e:
+        print(f"[images] Fetch failed ({e}); falling back to drawn illustrations.")
+        return {}
 
 
 def pick_image(cache, category, index):
@@ -124,3 +188,7 @@ def pick_image(cache, category, index):
     if not urls:
         return None
     return urls[index % len(urls)]
+
+
+if __name__ == "__main__":
+    build_cache()

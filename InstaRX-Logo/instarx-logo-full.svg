@@ -1,0 +1,34 @@
+<svg viewBox="0 0 560 160" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9466"/>
+      <stop offset="100%" stop-color="#C24B2B"/>
+    </linearGradient>
+    <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE1B8"/>
+      <stop offset="100%" stop-color="#F2A93C"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#9A5C2D" flood-opacity="0.32"/>
+    </filter>
+    <clipPath id="rightHalfClip">
+      <rect x="80" y="0" width="80" height="160"/>
+    </clipPath>
+  </defs>
+
+  <!-- capsule mark -->
+  <g filter="url(#softShadow)" transform="translate(0,14) rotate(-28 80 66)">
+    <rect x="5" y="33" width="150" height="66" rx="33" fill="url(#gradWarm)"/>
+    <rect x="5" y="33" width="150" height="66" rx="33" fill="url(#gradAmber)" clip-path="url(#rightHalfClip)"/>
+    <rect x="78" y="33" width="4" height="66" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse cx="38" cy="49" rx="20" ry="8" fill="#FFFFFF" opacity="0.30"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="190" y="103" font-family="Sora, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="72">
+    <tspan fill="#E1603D">Insta</tspan><tspan fill="#F2A93C">RX</tspan>
+  </text>
+  <text x="192" y="130" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="18" fill="#8A7364" letter-spacing="0.3">
+    Fast relief is what matters the most
+  </text>
+</svg>

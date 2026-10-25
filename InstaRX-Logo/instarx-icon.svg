@@ -1,0 +1,27 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9466"/>
+      <stop offset="100%" stop-color="#C24B2B"/>
+    </linearGradient>
+    <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE1B8"/>
+      <stop offset="100%" stop-color="#F2A93C"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#9A5C2D" flood-opacity="0.35"/>
+    </filter>
+    <clipPath id="rightHalfClip">
+      <rect x="100" y="20" width="100" height="160"/>
+    </clipPath>
+  </defs>
+
+  <rect width="200" height="200" rx="44" fill="#FFF8F1"/>
+
+  <g filter="url(#softShadow)" transform="rotate(-28 100 100)">
+    <rect x="25" y="67" width="150" height="66" rx="33" fill="url(#gradWarm)"/>
+    <rect x="25" y="67" width="150" height="66" rx="33" fill="url(#gradAmber)" clip-path="url(#rightHalfClip)"/>
+    <rect x="98" y="67" width="4" height="66" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse cx="58" cy="83" rx="22" ry="9" fill="#FFFFFF" opacity="0.30"/>
+  </g>
+</svg>

@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#03045E">
 <title>InstaRX — Medicines Delivered in Minutes</title>
+<link rel="icon" href="/img/favicon.ico" sizes="any">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,40 +14,57 @@
 <div id="site-header"></div>
 
 <section class="hero">
-  <div class="capsule-scene"><div class="capsule-3d"><div class="capsule-half a"></div><div class="capsule-half b"></div></div></div>
   <div class="container">
     <div class="hero-copy">
-      <div class="location-pill" id="location-pill">
-        <span>📍 Detecting your location...</span>
+      <div class="location-pill reveal" id="location-pill">
+        <span>📍 Detecting your location…</span>
         <button id="change-location-btn">Change</button>
       </div>
-      <h1>Medicines Delivered in<span class="accent">Just 10 Minutes</span></h1>
-      <p class="sub">Ordered from the verified chemist shop nearest you. Fast relief is what matters the most.</p>
-      <div class="hero-badges">
-        <span>⏱️ 10 Min Delivery</span>
-        <span>✅ Genuine Medicines</span>
-        <span>🏷️ Best Prices</span>
+      <h1 class="reveal">Medicines delivered in<span class="accent">just 10 minutes</span></h1>
+      <p class="sub reveal-2">Ordered from the verified chemist shop nearest you, packed and sent by them directly.</p>
+      <div class="hero-badges reveal-2">
+        <span>⏱️ 10-minute delivery</span>
+        <span>✅ Verified local chemists</span>
+        <span>🧾 Prescription friendly</span>
       </div>
-      <div class="hero-actions">
-        <a href="/category.html" class="btn btn-primary">⚡ Order Now</a>
-        <a href="/upload-prescription.html" class="btn btn-outline">⬆️ Upload Prescription</a>
+      <div class="hero-actions reveal-3">
+        <a href="/category.html" class="btn btn-primary">Order now</a>
+        <a href="/upload-prescription.html" class="btn btn-outline">Upload prescription</a>
       </div>
     </div>
-    <div class="hero-offer">
+    <div class="hero-offer reveal-2">
       <div class="off">Flat 25% OFF</div>
       <div class="desc">on your first order</div>
-      <div class="promo-code"><span>Use Code:</span> <b>INSTARX25</b></div>
+      <div class="promo-code"><span>Use code</span> <b>INSTARX25</b></div>
       <div class="hero-offer-features">
-        <span>🚚 Free delivery above &#8377;199</span>
-        <span>🔐 Secure payments</span>
+        <span>🚚 Free delivery above ₹199</span>
+        <span>🔒 Secure checkout</span>
       </div>
     </div>
   </div>
 </section>
 
+<!-- ============ QUICK SELECT ============ -->
+<section class="quick-select" id="quick-select">
+  <div class="container">
+    <div class="section-title">
+      <div>
+        <h2>Quick Select</h2>
+        <div class="sub">What people reach for most — tap a concern, add straight to cart</div>
+      </div>
+      <a href="/category.html">View all</a>
+    </div>
+    <div class="concern-rail" id="concern-rail"></div>
+    <div class="quick-grid" id="quick-grid"></div>
+  </div>
+</section>
+
 <section class="section">
   <div class="container">
-    <div class="section-title"><h2>Shop by Category</h2><a href="/category.html">View All</a></div>
+    <div class="section-title">
+      <h2>Shop by category</h2>
+      <a href="/category.html">View all</a>
+    </div>
     <div class="category-grid" id="category-grid"></div>
   </div>
 </section>
@@ -53,19 +73,19 @@
   <div class="container">
     <div class="promo-strips">
       <div class="promo-strip warm">
-        <div class="big">Up to 50% OFF</div>
+        <div class="big">Up to 50% off</div>
         <div class="small">On everyday medicines</div>
-        <a href="/category.html">Shop Now →</a>
+        <a href="/category.html">Shop now →</a>
       </div>
       <div class="promo-strip amber">
-        <div class="big">Free Delivery</div>
-        <div class="small">On orders above &#8377;199</div>
-        <a href="/category.html">Shop Now →</a>
+        <div class="big">Free delivery</div>
+        <div class="small">On orders above ₹199</div>
+        <a href="/category.html">Shop now →</a>
       </div>
       <div class="promo-strip green">
-        <div class="big">10 Minutes Express</div>
+        <div class="big">10-minute express</div>
         <div class="small">From your nearest chemist</div>
-        <a href="/category.html">Order Now →</a>
+        <a href="/category.html">Order now →</a>
       </div>
     </div>
   </div>
@@ -75,26 +95,31 @@
   <div class="container">
     <div class="split-grid">
       <div>
-        <div class="section-title"><h2>Top Selling Medicines</h2><a href="/category.html">View All</a></div>
+        <div class="section-title">
+          <h2>Top selling</h2>
+          <a href="/category.html">View all</a>
+        </div>
         <div class="carousel" id="top-selling"></div>
       </div>
       <div class="side-col">
         <div class="panel">
-          <div class="panel-title"><h3>Live Order Tracking</h3><a href="/track-order.html">View All</a></div>
+          <div class="panel-title"><h3>Live order tracking</h3><a href="/track-order.html">View all</a></div>
           <div id="live-tracking-panel"></div>
         </div>
         <div class="panel">
-          <div class="panel-title"><h3>Have a Question for a Chemist?</h3></div>
+          <div class="panel-title"><h3>Ask a chemist</h3></div>
           <div class="doctor-row">
-            <div class="doctor-avatar">👩‍⚕️</div>
+            <div class="doctor-avatar">🏪</div>
             <div>
-              <div class="name">Priya's Medical Store</div>
-              <div class="spec"><span class="online-dot"></span>Online now · Bandra West</div>
-              <div class="rating">⭐ 4.8 (2.4K orders)</div>
+              <div class="name">Partner chemists near you</div>
+              <div class="spec"><span class="online-dot"></span>Online now</div>
+              <div class="rating">★ 4.8 average rating</div>
             </div>
           </div>
-          <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 12px;">Chemists on InstaRX can answer quick dosage questions before you order.</p>
-          <a href="/category.html" class="btn btn-secondary btn-block btn-sm">Browse Nearby Chemists</a>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;">
+            Chemists on InstaRX can answer quick dosage questions before you order.
+          </p>
+          <a href="/category.html" class="btn btn-secondary btn-block btn-sm">Browse nearby chemists</a>
         </div>
       </div>
     </div>
@@ -103,6 +128,7 @@
 
 <div id="site-footer"></div>
 
+<script src="/js/illustrations.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/home.js"></script>
 </body>

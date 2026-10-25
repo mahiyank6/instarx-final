@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>InstaRX Prescription Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Same tokens as static/css/style.css so the demo looks like the real site. */
+:root {
+  --navy: #03045E; --blue-800: #023E8A; --primary: #0077B6; --primary-600: #0096C7;
+  --cyan: #00B4D8; --sky: #90E0EF; --ice: #CAF0F8; --ice-50: #F2FAFD;
+  --green: #2E7D32; --green-tint: #E8F5E9;
+  --danger: #C62828; --danger-tint: #FDECEC;
+  --text: #0A1B2A; --text-muted: #5E7183; --border: #DCEEF7; --surface: #FFFFFF;
+  --shadow: 0 4px 16px rgba(3, 4, 94, .08); --shadow-lg: 0 12px 32px rgba(3, 4, 94, .16);
+  --ease: cubic-bezier(.22, .61, .36, 1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; background: #E9F5FB; color: var(--text); -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+h1, h2, h3, .sora { font-family: Sora, Inter, sans-serif; letter-spacing: -.01em; }
+
+/* ---------- demo chrome ---------- */
+.demo-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 24px; background: #fff; border-bottom: 1px solid var(--border); }
+.demo-bar .logo { font-family: Sora; font-weight: 800; font-size: 22px; color: var(--primary); }
+.demo-bar .logo span { color: var(--cyan); }
+.demo-bar .what { font-size: 13.5px; color: var(--text-muted); flex: 1; min-width: 220px; }
+.demo-bar .what b { color: var(--text); }
+.reset-btn { border: 1.5px solid var(--primary); background: #fff; color: var(--primary); font-weight: 700; font-size: 13.5px; padding: 9px 16px; border-radius: 10px; }
+.reset-btn:hover { background: var(--ice-50); }
+
+.tabs { display: none; gap: 8px; padding: 12px 16px 0; }
+.tabs button { flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; font-weight: 700; font-size: 14px; color: var(--text-muted); position: relative; }
+.tabs button.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.tabs .dot { position: absolute; top: 8px; right: 12px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); display: none; }
+.tabs .dot.show { display: block; }
+
+.stage { display: flex; gap: 36px; justify-content: center; align-items: flex-start; padding: 24px 16px 18px; }
+.device { flex: 0 0 390px; width: 390px; }
+.dev-label { text-align: center; font-weight: 700; font-size: 13px; letter-spacing: .6px; text-transform: uppercase; color: var(--blue-800); margin-bottom: 10px; }
+.screen {
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
+  height: min(780px, calc(100vh - 150px)); min-height: 620px;
+  background: #fff; border: 10px solid #0A1B2A; border-radius: 36px; box-shadow: var(--shadow-lg);
+}
+.foot-note { max-width: 820px; margin: 0 auto 28px; padding: 0 16px; font-size: 12.5px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+
+@media (max-width: 860px) {
+  /* fill the phone exactly: bar + tabs on top, the active screen takes the rest */
+  body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+  .wide-only { display: none; }
+  .demo-bar { padding: 10px 16px; gap: 10px; flex-wrap: nowrap; }
+  .demo-bar .logo { font-size: 19px; }
+  .demo-bar .what { font-size: 12px; min-width: 0; line-height: 1.35; }
+  .reset-btn { padding: 8px 12px; font-size: 12.5px; flex-shrink: 0; }
+  .foot-note { display: none; }
+  .tabs { display: flex; }
+  .stage { flex: 1; min-height: 0; padding: 12px 16px 16px; align-items: stretch; }
+  .device { display: none; flex: 1 1 auto; width: 100%; max-width: 480px; min-height: 0; }
+  .device.on { display: flex; flex-direction: column; }
+  .dev-label { display: none; }
+  .screen { flex: 1; min-height: 0; height: auto; border: 1px solid var(--border); border-radius: 20px; }
+}
+
+/* ---------- shared bits ---------- */
+.avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: Sora; font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(135deg, var(--cyan), var(--primary)); }
+.btn { border: none; border-radius: 12px; font-weight: 700; font-size: 14.5px; min-height: 48px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s var(--ease), background .18s; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-600); }
+.btn-outline { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-ghost { background: var(--ice-50); color: var(--text); border: 1px solid var(--border); }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.chip.new { background: var(--ice); color: var(--blue-800); }
+.chip.wait { background: #FFF4E0; color: #8A5300; }
+.chip.ok { background: var(--green-tint); color: var(--green); }
+.chip.no { background: var(--danger-tint); color: var(--danger); }
+.chip.muted { background: #EEF3F7; color: var(--text-muted); }
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* Only newly added messages and cards animate; re-renders must not replay it. */
+.fresh { animation: fade-up .25s var(--ease); }
+@keyframes slide-down { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+/* ---------- customer: chat ---------- */
+.c-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+.c-head .who { flex: 1; min-width: 0; }
+.c-head .nm { font-weight: 700; font-size: 15px; }
+.c-head .st { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 2px; }
+.thread { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 16px 14px 20px; background: var(--ice-50); display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+/* Without this the flex column squashes cards (they clip with overflow: hidden)
+   instead of letting the chat scroll, which hid the pay button. */
+.thread > * { flex-shrink: 0; }
+.msg { max-width: 84%; padding: 10px 13px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+.msg.me { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 5px; }
+.msg.chem { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+.msg.sys { align-self: center; background: var(--ice); color: var(--blue-800); font-size: 12px; font-weight: 600; border-radius: 999px; padding: 7px 14px; text-align: center; max-width: 94%; }
+.msg.chem.sorry { border-color: #F3C7C7; background: #FFF8F8; }
+.msg .from { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+.msg.doc { padding: 5px; }
+.doc-thumb { width: 220px; height: 150px; border-radius: 12px; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.doc-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.pdf-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--danger); font-weight: 800; font-size: 13px; }
+.doc-cap { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 7px 3px; font-size: 12.5px; }
+.doc-cap .fn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+.ticks { font-size: 11px; opacity: .85; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.ticks.seen { color: var(--sky); opacity: 1; font-weight: 700; }
+.typing { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-radius: 16px; border-bottom-left-radius: 5px; padding: 10px 14px; font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); display: inline-block; animation: blink 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+
+.offer { align-self: flex-start; width: 90%; background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.offer-h { padding: 12px 14px 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.orow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 14px; font-size: 13.5px; }
+.orow .q { color: var(--text-muted); font-size: 12px; }
+.orow.out .nm2 { color: var(--text-muted); text-decoration: line-through; }
+.otot { border-top: 1px solid var(--border); margin-top: 6px; padding: 10px 14px; }
+.otot .orow { padding: 3px 0; }
+.otot .grand { font-weight: 800; font-size: 15.5px; color: var(--navy); font-family: Sora; }
+.oact { display: flex; gap: 8px; padding: 0 14px 14px; }
+.oact .btn { flex: 1; min-height: 46px; font-size: 14px; }
+.answered { padding: 0 14px 14px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+
+.tracker { align-self: stretch; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.tracker .t-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.tracker .t-top b { font-family: Sora; font-size: 15px; color: var(--navy); }
+.steps { display: flex; justify-content: space-between; position: relative; }
+.steps::before { content: ""; position: absolute; top: 13px; left: 12%; right: 12%; height: 3px; background: var(--border); }
+.steps .bar { position: absolute; top: 13px; left: 12%; height: 3px; background: var(--primary); transition: width .4s var(--ease); }
+.step { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; }
+.step .d { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+.step.done .d { background: var(--primary); border-color: var(--primary); color: #fff; }
+.step.done { color: var(--text); }
+
+.composer { padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); background: #fff; }
+.composer .btn { width: 100%; min-height: 54px; font-size: 15px; }
+
+/* in-device bottom sheet */
+.sheet-wrap { position: absolute; inset: 0; background: rgba(3,4,94,.42); display: none; align-items: flex-end; z-index: 30; }
+.sheet-wrap.show { display: flex; animation: fade-up .01s; }
+.sheet { width: 100%; background: #fff; border-radius: 22px 22px 0 0; padding: 8px 18px 22px; animation: sheet-up .3s var(--ease); max-height: 88%; overflow-y: auto; }
+.grab { width: 42px; height: 4px; border-radius: 4px; background: var(--border); margin: 6px auto 14px; }
+.sheet h3 { margin: 0 0 4px; font-size: 18px; color: var(--navy); }
+.sheet p { margin: 0 0 16px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.sheet .stack { display: flex; flex-direction: column; gap: 10px; }
+.pick-preview { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; height: 210px; background: #F7FAFC; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.pick-preview img { width: 100%; height: 100%; object-fit: contain; }
+.pay-methods { display: flex; gap: 8px; margin-bottom: 14px; }
+.pay-methods button { flex: 1; min-height: 48px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; font-weight: 700; font-size: 13.5px; color: var(--text-muted); }
+.pay-methods button.on { border-color: var(--primary); color: var(--primary); background: var(--ice-50); }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--ice); border-top-color: var(--primary); animation: rot .7s linear infinite; margin: 10px auto; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* ---------- chemist ---------- */
+.k-head { background: var(--navy); color: #fff; padding: 16px 16px 14px; display: flex; align-items: center; gap: 12px; }
+.k-head .nm { font-family: Sora; font-weight: 700; font-size: 16px; }
+.k-head .sub { font-size: 12px; color: var(--sky); margin-top: 2px; }
+.k-head .online { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.12); padding: 6px 10px; border-radius: 999px; }
+.k-head .online i { width: 8px; height: 8px; border-radius: 50%; background: #5BD27A; }
+.k-nav { display: flex; gap: 10px; padding: 12px 14px; background: #fff; border-bottom: 1px solid var(--border); }
+.k-tab { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 11px 6px; border-radius: 14px; background: var(--ice-50); border: 1px solid var(--ice); font-size: 12.5px; font-weight: 700; color: var(--text); }
+.k-tab svg { width: 26px; height: 26px; }
+.k-tab.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.k-badge { position: absolute; top: 6px; left: calc(50% + 8px); min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 800; display: none; align-items: center; justify-content: center; border: 2px solid #fff; }
+.k-badge.show { display: flex; }
+.k-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px; background: var(--ice-50); }
+.k-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 13.5px; line-height: 1.5; }
+.k-empty .ic { width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%; background: #fff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.k-section { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin: 4px 2px 10px; }
+.req { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.req.new { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,180,216,.16); }
+.req.closed { opacity: .72; }
+.req-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.req-top .avatar { width: 36px; height: 36px; font-size: 12.5px; }
+.req-top .who { flex: 1; min-width: 0; }
+.req-top .nm { font-weight: 700; font-size: 14.5px; }
+.req-top .tm { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+.req-doc { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.req-doc .mini { width: 54px; height: 64px; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.req-doc .mini img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.req-doc .meta { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+.req-doc .meta b { color: var(--text); }
+.req-log { font-size: 12.5px; color: var(--text-muted); background: var(--ice-50); border-radius: 10px; padding: 9px 11px; margin-bottom: 12px; line-height: 1.45; }
+.req .btn { min-height: 46px; font-size: 14px; }
+.up-next { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: .4px; text-transform: uppercase; margin-left: 4px; }
+
+.k-banner { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 25; display: none; align-items: center; gap: 12px; background: var(--navy); color: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow-lg); cursor: pointer; animation: slide-down .3s var(--ease); }
+.k-banner.show { display: flex; }
+.k-banner .tt { font-weight: 700; font-size: 13.5px; }
+.k-banner .ss { font-size: 12px; color: var(--sky); margin-top: 1px; }
+.k-banner .go { margin-left: auto; font-size: 12.5px; font-weight: 800; color: var(--sky); white-space: nowrap; }
+
+/* document viewer */
+.viewer { position: absolute; inset: 0; z-index: 20; background: #fff; display: none; flex-direction: column; animation: sheet-up .28s var(--ease); }
+.viewer.show { display: flex; }
+.v-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.v-head .back { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--ice-50); color: var(--navy); display: flex; align-items: center; justify-content: center; }
+.v-head .t { font-weight: 700; font-size: 15px; }
+.v-head .s { font-size: 12px; color: var(--text-muted); }
+.v-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px; }
+.v-doc { height: 230px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #F7FAFC; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
+.v-doc img { width: 100%; height: 100%; object-fit: contain; }
+.v-doc iframe { width: 100%; height: 100%; border: none; }
+.v-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.v-title h4 { margin: 0; font-size: 14.5px; color: var(--navy); }
+.v-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.45; }
+.mrow { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.mrow-top { display: flex; align-items: center; gap: 10px; }
+.mrow-top .nm { flex: 1; min-width: 0; }
+.mrow-top .nm b { font-size: 14px; display: block; }
+.mrow-top .nm span { font-size: 12px; color: var(--text-muted); }
+.qty { display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--border); border-radius: 999px; padding: 2px; }
+.qty button { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--ice-50); color: var(--primary); font-weight: 800; font-size: 16px; }
+.qty span { min-width: 22px; text-align: center; font-weight: 800; font-size: 13.5px; }
+.rm { width: 36px; height: 36px; border: none; background: none; color: var(--text-muted); border-radius: 50%; font-size: 15px; }
+.rm:hover { background: var(--danger-tint); color: var(--danger); }
+.stock { display: flex; gap: 6px; margin-top: 10px; }
+.stock button { flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--border); background: #fff; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+.stock button.in.on { background: var(--green-tint); border-color: var(--green); color: var(--green); }
+.stock button.out.on { background: var(--danger-tint); border-color: var(--danger); color: var(--danger); }
+.add-row { display: flex; gap: 8px; margin: 14px 0 6px; }
+.add-row select { flex: 1; min-width: 0; min-height: 44px; border-radius: 10px; border: 1.5px solid var(--border); padding: 0 10px; font-family: inherit; font-size: 13.5px; color: var(--text); background: #fff; }
+.add-row .btn { min-height: 44px; }
+.shortcuts { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0 4px; align-items: center; }
+.shortcuts .lbl { font-size: 11.5px; font-weight: 700; color: var(--text-muted); width: 100%; }
+.shortcuts button { border: 1px dashed var(--primary); background: #fff; color: var(--primary); border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 700; }
+.v-foot { border-top: 1px solid var(--border); padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; }
+.preview { font-size: 12.5px; line-height: 1.5; background: var(--ice-50); border: 1px solid var(--ice); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.preview .pl { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+.v-foot .btn { width: 100%; min-height: 52px; }
+
+.ord-items { font-size: 13px; line-height: 1.6; margin: 0 0 10px; padding-left: 18px; }
+.ord-total { display: flex; justify-content: space-between; font-weight: 800; font-family: Sora; color: var(--navy); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <div class="logo">Insta<span>RX</span></div>
+  <div class="what"><b>Prescription chat demo.</b><span class="wide-only"> Left is the customer's phone, right is the chemist's.</span> Simulated, nothing reaches the real server.</div>
+  <button class="reset-btn" id="reset">Reset demo</button>
+</div>
+
+<div class="tabs" id="tabs">
+  <button data-panel="customer" class="on">Customer<span class="dot" id="dot-customer"></span></button>
+  <button data-panel="chemist">Chemist<span class="dot" id="dot-chemist"></span></button>
+</div>
+
+<main class="stage">
+  <!-- ================= CUSTOMER ================= -->
+  <section class="device on" id="dev-customer">
+    <div class="dev-label">Customer &middot; Rohit K.</div>
+    <div class="screen">
+      <div class="c-head">
+        <div class="avatar">SM</div>
+        <div class="who">
+          <div class="nm">Shree Medical Store</div>
+          <div class="st">Online &middot; nearest chemist, 1.2 km</div>
+        </div>
+      </div>
+      <div class="thread" id="thread"></div>
+      <div class="composer">
+        <button class="btn btn-primary" id="attach">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+          Send prescription
+        </button>
+      </div>
+      <div class="sheet-wrap" id="c-sheet"></div>
+    </div>
+  </section>
+
+  <!-- ================= CHEMIST ================= -->
+  <section class="device" id="dev-chemist">
+    <div class="dev-label">Chemist &middot; Shree Medical Store</div>
+    <div class="screen">
+      <div class="k-head">
+        <div class="avatar" style="background:rgba(255,255,255,.16);">SM</div>
+        <div>
+          <div class="nm">Shree Medical Store</div>
+          <div class="sub">Gota, Ahmedabad</div>
+        </div>
+        <div class="online"><i></i>Online</div>
+      </div>
+      <div class="k-nav">
+        <button class="k-tab on" data-tab="docs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M14 3v5h5"/><path d="M19 8v3"/><path d="M8 12h5M8 16h2"/><circle cx="17.5" cy="17.5" r="2.2"/><path d="M13 17.5s1.7-3.2 4.5-3.2 4.5 3.2 4.5 3.2-1.7 3.2-4.5 3.2-4.5-3.2-4.5-3.2z"/></svg>
+          View documents
+          <span class="k-badge" id="badge-docs">0</span>
+        </button>
+        <button class="k-tab" data-tab="orders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+          Orders
+          <span class="k-badge" id="badge-orders">0</span>
+        </button>
+      </div>
+      <div class="k-banner" id="k-banner"></div>
+      <div class="k-body" id="k-body"></div>
+      <div class="viewer" id="viewer"></div>
+    </div>
+  </section>
+</main>
+
+<p class="foot-note">The tick marks show Sent, Delivered and Seen. "Demo shortcuts" in the chemist's document view let you try all three outcomes quickly. Prices come from the real InstaRX catalogue.</p>
+
+<input type="file" id="file-input" accept="image/*,.pdf" hidden>
+
+<script>
+/* ============================================================
+   Data
+   ============================================================ */
+const CATALOGUE = [
+  { id: 1,  name: "Dolo 650mg",           unit: "Strip of 15 Tablets", price: 32 },
+  { id: 23, name: "Pan 40mg",             unit: "Strip of 15 Tablets", price: 135 },
+  { id: 16, name: "Cetirizine 10mg",      unit: "Strip of 10 Tablets", price: 22 },
+  { id: 3,  name: "Combiflam",            unit: "Strip of 20 Tablets", price: 45 },
+  { id: 12, name: "Benadryl Cough Syrup", unit: "Bottle of 100ml",     price: 125 },
+  { id: 2,  name: "Crocin Advance 500mg", unit: "Strip of 15 Tablets", price: 60 },
+  { id: 9,  name: "Meftal Spas",          unit: "Strip of 10 Tablets", price: 38 },
+  { id: 14, name: "Otrivin Nasal Spray",  unit: "Bottle of 10ml",      price: 92 },
+];
+const med = (id) => CATALOGUE.find((m) => m.id === id);
+
+// What the chemist "reads" off each sample prescription.
+const RX_LINES_ROHIT = [{ id: 1, qty: 1 }, { id: 23, qty: 1 }, { id: 16, qty: 1 }];
+const RX_LINES_ANANYA = [{ id: 3, qty: 1 }, { id: 12, qty: 1 }];
+
+function sampleRxSvg(patient, lines) {
+  const rows = lines.map((l, i) => `<text x="44" y="${238 + i * 38}" font-size="17" fill="#1B2B4B" font-family="Georgia, serif">${i + 1}.  ${l}</text>`).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520">
+    <rect width="420" height="520" fill="#FFFEF9"/>
+    <rect x="0" y="0" width="420" height="78" fill="#EAF6FB"/>
+    <text x="24" y="34" font-size="19" font-weight="700" fill="#023E8A" font-family="Arial">City Care Clinic</text>
+    <text x="24" y="56" font-size="12" fill="#5E7183" font-family="Arial">Dr. A. Mehta, MBBS &#183; Sample prescription for demo</text>
+    <line x1="24" y1="96" x2="396" y2="96" stroke="#DCEEF7" stroke-width="2"/>
+    <text x="24" y="124" font-size="13" fill="#5E7183" font-family="Arial">Patient</text>
+    <text x="90" y="124" font-size="14" fill="#0A1B2A" font-family="Arial" font-weight="700">${patient}</text>
+    <text x="270" y="124" font-size="13" fill="#5E7183" font-family="Arial">Date  10/10/2026</text>
+    <text x="24" y="190" font-size="40" fill="#0077B6" font-family="Georgia, serif" font-style="italic">Rx</text>
+    ${rows}
+    <path d="M250 455 q20 -26 40 0 t40 0 t36 -8" stroke="#023E8A" stroke-width="2" fill="none"/>
+    <text x="260" y="480" font-size="11" fill="#5E7183" font-family="Arial">Signature</text>
+    <text x="210" y="330" font-size="64" fill="#0077B6" fill-opacity=".06" font-family="Arial" font-weight="800" text-anchor="middle" transform="rotate(-24 210 330)">SAMPLE</text>
+  </svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+const SAMPLE_ROHIT = sampleRxSvg("Rohit K.", ["Tab. Dolo 650 mg   1-0-1  x 5 days", "Tab. Pan 40 mg   1-0-0  before food", "Tab. Cetirizine 10 mg   0-0-1"]);
+const SAMPLE_ANANYA = sampleRxSvg("Ananya S.", ["Tab. Combiflam   1-0-1  after food", "Benadryl Cough Syrup   10 ml  x 3"]);
+
+/* ============================================================
+   State
+   ============================================================ */
+let S;
+let pick = null;          // file being prepared in the customer's attach sheet
+let shownCount = 0;       // chat messages already on screen (only newer ones animate)
+let typingShown = false;
+const seenCards = new Set();   // chemist cards already on screen
+
+function animateNewCards(root) {
+  root.querySelectorAll("[data-card]").forEach((c) => {
+    if (!seenCards.has(c.dataset.card)) { c.classList.add("fresh"); seenCards.add(c.dataset.card); }
+  });
+}
+let payMethod = "upi";
+const timers = new Set();
+const later = (ms, fn) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); };
+
+function freshState() {
+  return {
+    reqs: [],
+    nextReq: 101,
+    nextOrder: 1042,
+    thread: [{ from: "sys", text: "Send a photo or PDF of your prescription. The chemist checks stock and replies right here." }],
+    typing: false,
+    chemTab: "docs",
+    viewer: null,         // request id open in the document viewer
+    panel: "customer",
+    ananyaSent: false,
+  };
+}
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const rupees = (n) => "₹" + Math.round(n);
+const clock = (t) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const req = (id) => S.reqs.find((r) => r.id === id);
+const avail = (r) => r.items.filter((i) => i.inStock);
+const outOf = (r) => r.items.filter((i) => !i.inStock);
+const subtotal = (items) => items.reduce((s, i) => s + med(i.id).price * i.qty, 0);
+const deliveryFee = (sub) => (sub >= 199 || sub === 0 ? 0 : 29);
+
+function joinNames(items) {
+  const n = items.map((i) => med(i.id).name);
+  return n.length === 1 ? n[0] : n.slice(0, -1).join(", ") + " and " + n[n.length - 1];
+}
+
+// The three replies, worded as you wrote them.
+function replyFor(r) {
+  const a = avail(r), o = outOf(r);
+  if (!r.items.length) return { kind: "empty", text: "Add at least one medicine from the prescription first." };
+  if (!a.length) return { kind: "none", text: "Medicine not available. We are sorry for the inconvenience." };
+  if (!o.length) return { kind: "all", text: `Good news, ${a.length === 1 ? "your medicine is" : a.length === 2 ? "both medicines are" : `all ${a.length} medicines are`} available.` };
+  return {
+    kind: "partial",
+    text: `${joinNames(a)} ${a.length > 1 ? "are" : "is"} available but ${joinNames(o)} ${o.length > 1 ? "are" : "is"} out of stock. Would you like to buy the available stock?`,
+  };
+}
+
+function markUnread(panel) {
+  if (S.panel !== panel) $("dot-" + panel).classList.add("show");
+}
+
+/* ============================================================
+   Customer side
+   ============================================================ */
+function renderThread() {
+  const el = $("thread");
+  let html = "";
+  for (const m of S.thread) {
+    if (m.from === "sys") { html += `<div class="msg sys">${esc(m.text)}</div>`; continue; }
+    if (m.kind === "doc") {
+      const r = req(m.reqId);
+      const ticks = r.delivery === "seen" ? `<span class="ticks seen">✓✓ Seen</span>`
+        : r.delivery === "delivered" ? `<span class="ticks">✓✓ Delivered</span>` : `<span class="ticks">✓ Sent</span>`;
+      html += `<div class="msg me doc">
+        <div class="doc-thumb">${r.isPdf ? `<div class="pdf-tile"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>PDF</div>` : `<img src="${r.doc}" alt="Prescription">`}</div>
+        <div class="doc-cap"><span class="fn">${esc(r.fileName)}</span>${ticks}</div>
+      </div>`;
+      continue;
+    }
+    if (m.kind === "text") {
+      html += `<div class="msg ${m.from}${m.sorry ? " sorry" : ""}">${m.from === "chem" ? `<div class="from">Shree Medical Store</div>` : ""}${esc(m.text)}</div>`;
+      continue;
+    }
+    if (m.kind === "offer") { html += offerHtml(req(m.reqId)); continue; }
+    if (m.kind === "tracker") { html += trackerHtml(req(m.reqId)); continue; }
+  }
+  if (S.typing) html += `<div class="typing"><i></i><i></i><i></i>Shree Medical Store is checking stock</div>`;
+  el.innerHTML = html;
+  // One top-level element per message, so index tells us what is new since last time.
+  [...el.children].forEach((c, i) => {
+    if (c.classList.contains("typing") ? !typingShown : i >= shownCount) c.classList.add("fresh");
+  });
+  shownCount = S.thread.length;
+  typingShown = S.typing;
+  el.scrollTop = el.scrollHeight;
+}
+
+function offerHtml(r) {
+  const a = avail(r), o = outOf(r);
+  const sub = subtotal(a), fee = deliveryFee(sub);
+  const rows = a.map((i) => `<div class="orow"><span class="nm2">${esc(med(i.id).name)} <span class="q">x${i.qty}</span></span><span>${rupees(med(i.id).price * i.qty)}</span></div>`).join("")
+    + o.map((i) => `<div class="orow out"><span class="nm2">${esc(med(i.id).name)}</span><span class="chip no">Out of stock</span></div>`).join("");
+  let act;
+  if (r.answer === "yes") act = `<div class="answered">You chose to buy ${r.mode === "partial" ? "the available stock" : "these medicines"}.</div>`;
+  else if (r.answer === "no") act = `<div class="answered">You declined this offer.</div>`;
+  else if (r.mode === "partial") act = `<div class="oact"><button class="btn btn-ghost" data-ans="no" data-req="${r.id}">No</button><button class="btn btn-primary" data-ans="yes" data-req="${r.id}">Yes, buy available</button></div>`;
+  else act = `<div class="oact"><button class="btn btn-primary" data-ans="yes" data-req="${r.id}">Proceed to Payment</button></div>`;
+  return `<div class="offer">
+    <div class="offer-h">${r.mode === "partial" ? "Available now" : "Your order"}</div>
+    ${rows}
+    <div class="otot">
+      <div class="orow"><span>Item total</span><span>${rupees(sub)}</span></div>
+      <div class="orow"><span>Delivery</span><span>${fee ? rupees(fee) : "FREE"}</span></div>
+      <div class="orow grand"><span>To pay</span><span>${rupees(sub + fee)}</span></div>
+    </div>
+    ${act}
+  </div>`;
+}
+
+const TRACK = ["paid", "packed", "out", "delivered"];
+function trackerHtml(r) {
+  const idx = TRACK.indexOf(r.status);
+  const labels = ["Confirmed", "Packed", "Out for delivery", "Delivered"];
+  const pct = Math.max(0, idx) / (labels.length - 1) * 76;
+  return `<div class="tracker">
+    <div class="t-top"><b>Order #${r.orderId}</b><span class="chip ${r.status === "delivered" ? "ok" : "new"}">${labels[Math.max(0, idx)]}</span></div>
+    <div class="steps"><div class="bar" style="width:${pct}%"></div>
+      ${labels.map((l, i) => `<div class="step ${i <= idx ? "done" : ""}"><div class="d">${i <= idx ? "✓" : i + 1}</div>${l}</div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function openSheet(html) { $("c-sheet").innerHTML = `<div class="sheet"><div class="grab"></div>${html}</div>`; $("c-sheet").classList.add("show"); }
+function closeSheet() { $("c-sheet").classList.remove("show"); $("c-sheet").innerHTML = ""; }
+$("c-sheet").addEventListener("click", (e) => { if (e.target.id === "c-sheet") closeSheet(); });
+
+function attachSheet() {
+  if (pick) {
+    openSheet(`<h3>Send this prescription?</h3>
+      <p>Shree Medical Store will check stock and reply in this chat.</p>
+      <div class="pick-preview">${pick.isPdf ? `<div class="pdf-tile"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>${esc(pick.fileName)}</div>` : `<img src="${pick.doc}" alt="">`}</div>
+      <div class="stack"><button class="btn btn-primary btn-block" id="send-pick">Send to chemist</button><button class="btn btn-ghost btn-block" id="cancel-pick">Choose a different file</button></div>`);
+    $("send-pick").onclick = () => { const p = pick; pick = null; closeSheet(); sendPrescription(p); };
+    $("cancel-pick").onclick = () => { pick = null; attachSheet(); };
+    return;
+  }
+  openSheet(`<h3>Send your prescription</h3>
+    <p>A clear photo of the full page works best. Images and PDFs are fine.</p>
+    <div class="stack">
+      <button class="btn btn-primary btn-block" id="pick-file">Take a photo or choose a file</button>
+      <button class="btn btn-outline btn-block" id="pick-sample">Use a sample prescription</button>
+    </div>`);
+  $("pick-file").onclick = () => $("file-input").click();
+  $("pick-sample").onclick = () => { pick = { doc: SAMPLE_ROHIT, fileName: "prescription.jpg", isPdf: false }; attachSheet(); };
+}
+$("attach").onclick = attachSheet;
+$("file-input").addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  pick = { doc: URL.createObjectURL(f), fileName: f.name, isPdf: f.type === "application/pdf" || /\.pdf$/i.test(f.name) };
+  attachSheet();
+});
+
+function newRequest(customer, initials, file, lines, auto) {
+  const r = {
+    id: S.nextReq++, customer, initials, auto,
+    doc: file.doc, fileName: file.fileName, isPdf: file.isPdf,
+    items: lines.map((l) => ({ ...l, inStock: true })),
+    status: "new", delivery: "sent", mode: null, answer: null, orderId: null,
+    log: [], at: Date.now(),
+  };
+  S.reqs.push(r);
+  return r;
+}
+
+function sendPrescription(file) {
+  // A real photo can't be read automatically in the demo, so the chemist side
+  // starts with the sample's medicines and the chemist edits the list.
+  const r = newRequest("Rohit K.", "RK", file, RX_LINES_ROHIT, false);
+  S.thread.push({ from: "me", kind: "doc", reqId: r.id });
+  renderAll();
+  later(700, () => {
+    r.delivery = "delivered";
+    showBanner(r);
+    markUnread("chemist");
+    renderAll();
+  });
+  // A second customer arrives shortly after, so the chemist has a queue.
+  if (!S.ananyaSent) {
+    S.ananyaSent = true;
+    later(6000, () => {
+      const a = newRequest("Ananya S.", "AS", { doc: SAMPLE_ANANYA, fileName: "rx_ananya.jpg", isPdf: false }, RX_LINES_ANANYA, true);
+      a.delivery = "delivered";
+      if (!S.viewer) showBanner(a);
+      markUnread("chemist");
+      renderAll();
+    });
+  }
+}
+
+$("thread").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ans]");
+  if (!b) return;
+  const r = req(Number(b.dataset.req));
+  if (b.dataset.ans === "no") {
+    r.answer = "no"; r.status = "closed_declined";
+    r.log.push("Customer replied: No. Request closed.");
+    S.thread.push({ from: "me", kind: "text", text: "No, thanks." });
+    S.thread.push({ from: "sys", text: "Request closed. You can send another prescription any time." });
+    markUnread("chemist");
+    afterClose(r);
+    renderAll();
+    return;
+  }
+  paySheet(r);
+});
+
+function paySheet(r) {
+  const sub = subtotal(avail(r)), total = sub + deliveryFee(sub);
+  openSheet(`<h3>Payment</h3>
+    <p>${avail(r).length} item${avail(r).length > 1 ? "s" : ""} from Shree Medical Store. Simulated, no money moves.</p>
+    <div class="pay-methods"><button data-m="upi" class="${payMethod === "upi" ? "on" : ""}">UPI</button><button data-m="cod" class="${payMethod === "cod" ? "on" : ""}">Cash on delivery</button></div>
+    <button class="btn btn-primary btn-block" id="pay-go">${payMethod === "upi" ? "Pay" : "Confirm order,"} ${rupees(total)}</button>`);
+  document.querySelectorAll(".pay-methods button").forEach((b) => b.onclick = () => { payMethod = b.dataset.m; paySheet(r); });
+  $("pay-go").onclick = () => {
+    openSheet(`<div class="spinner"></div><p style="text-align:center;margin:10px 0 18px;font-weight:700;color:var(--text);">${payMethod === "upi" ? "Processing payment" : "Confirming your order"}</p>`);
+    later(1200, () => { closeSheet(); confirmOrder(r, "customer"); });
+  };
+}
+
+function confirmOrder(r, by) {
+  r.answer = "yes"; r.status = "paid"; r.orderId = S.nextOrder++;
+  r.log.push(`Customer replied: Yes. Order #${r.orderId} placed (${payMethod === "upi" ? "UPI, paid" : "cash on delivery"}).`);
+  if (!r.auto) {
+    S.thread.push({ from: "me", kind: "text", text: r.mode === "partial" ? "Yes, I'll buy the available stock." : "Placing the order." });
+    S.thread.push({ from: "chem", kind: "tracker", reqId: r.id });
+  }
+  markUnread("chemist");
+  afterClose(r);
+  renderAll();
+}
+
+/* ============================================================
+   Chemist side
+   ============================================================ */
+function showBanner(r) {
+  const el = $("k-banner");
+  el.innerHTML = `<div class="avatar" style="width:36px;height:36px;font-size:12.5px;">${r.initials}</div>
+    <div><div class="tt">New prescription from ${esc(r.customer)}</div><div class="ss">Tap to view the document</div></div>
+    <span class="go">View</span>`;
+  el.dataset.req = r.id;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 5000);
+}
+$("k-banner").onclick = () => { $("k-banner").classList.remove("show"); openViewer(Number($("k-banner").dataset.req)); };
+
+const OPEN = ["new", "reviewing", "awaiting_customer"];
+function renderChemist() {
+  const fresh = S.reqs.filter((r) => r.status === "new").length;
+  const active = S.reqs.filter((r) => ["paid", "packed", "out"].includes(r.status)).length;
+  $("badge-docs").textContent = fresh; $("badge-docs").classList.toggle("show", fresh > 0);
+  $("badge-orders").textContent = active; $("badge-orders").classList.toggle("show", active > 0);
+  document.querySelectorAll(".k-tab").forEach((t) => t.classList.toggle("on", t.dataset.tab === S.chemTab));
+
+  const body = $("k-body");
+  if (S.chemTab === "docs") {
+    const open = S.reqs.filter((r) => OPEN.includes(r.status)).sort((a, b) => a.at - b.at);
+    const done = S.reqs.filter((r) => r.status.startsWith("closed")).sort((a, b) => b.at - a.at);
+    if (!open.length && !done.length) {
+      body.innerHTML = `<div class="k-empty"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div>No prescriptions yet.<br>When a customer sends one, you'll be notified here.</div>`;
+      return;
+    }
+    let html = "";
+    if (open.length) html += `<div class="k-section">Waiting on you or the customer</div>` + open.map((r, i) => reqCard(r, i === 1 ? "up" : "")).join("");
+    if (done.length) html += `<div class="k-section" style="margin-top:18px;">Closed</div>` + done.map((r) => reqCard(r)).join("");
+    body.innerHTML = html;
+    animateNewCards(body);
+  } else {
+    const orders = S.reqs.filter((r) => r.orderId).sort((a, b) => b.orderId - a.orderId);
+    if (!orders.length) {
+      body.innerHTML = `<div class="k-empty"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>No orders yet.<br>Orders appear here once a customer confirms.</div>`;
+      return;
+    }
+    body.innerHTML = orders.map(orderCard).join("");
+    animateNewCards(body);
+  }
+}
+
+function reqCard(r, tag) {
+  const chip = {
+    new: `<span class="chip new">New</span>`,
+    reviewing: `<span class="chip new">Opened</span>`,
+    awaiting_customer: `<span class="chip wait">Waiting for customer</span>`,
+    closed_unavailable: `<span class="chip no">Not available</span>`,
+    closed_declined: `<span class="chip muted">Customer said no</span>`,
+  }[r.status];
+  const action = r.status === "awaiting_customer" ? `<button class="btn btn-ghost btn-block" data-open="${r.id}">View document</button>`
+    : r.status.startsWith("closed") ? "" : `<button class="btn btn-primary btn-block" data-open="${r.id}">View document</button>`;
+  return `<div class="req ${r.status === "new" ? "new" : ""} ${r.status.startsWith("closed") ? "closed" : ""}" data-card="d${r.id}">
+    <div class="req-top"><div class="avatar">${r.initials}</div>
+      <div class="who"><div class="nm">${esc(r.customer)}${tag === "up" ? `<span class="up-next">Up next</span>` : ""}</div><div class="tm">Sent ${clock(r.at)}</div></div>${chip}</div>
+    <div class="req-doc"><div class="mini">${r.isPdf ? `<b style="color:var(--danger);font-size:12px;">PDF</b>` : `<img src="${r.doc}" alt="">`}</div>
+      <div class="meta"><b>${esc(r.fileName)}</b><br>${r.status === "new" ? "Not opened yet" : `${r.items.length} medicine${r.items.length === 1 ? "" : "s"} listed`}</div></div>
+    ${r.log.length ? `<div class="req-log">${r.log.map(esc).join("<br>")}</div>` : ""}
+    ${action}
+  </div>`;
+}
+
+function orderCard(r) {
+  const a = avail(r), sub = subtotal(a), fee = deliveryFee(sub);
+  const next = { paid: ["packed", "Mark packed"], packed: ["out", "Mark out for delivery"], out: ["delivered", "Mark delivered"] }[r.status];
+  const chip = { paid: `<span class="chip new">New order</span>`, packed: `<span class="chip new">Packed</span>`, out: `<span class="chip wait">Out for delivery</span>`, delivered: `<span class="chip ok">Delivered</span>` }[r.status];
+  return `<div class="req" data-card="o${r.id}">
+    <div class="req-top"><div class="avatar">${r.initials}</div><div class="who"><div class="nm">Order #${r.orderId}</div><div class="tm">${esc(r.customer)} &middot; from prescription</div></div>${chip}</div>
+    <ul class="ord-items">${a.map((i) => `<li>${esc(med(i.id).name)} x${i.qty}</li>`).join("")}</ul>
+    <div class="ord-total"><span>Total</span><span>${rupees(sub + fee)}</span></div>
+    ${next ? `<button class="btn btn-primary btn-block" data-adv="${r.id}" data-to="${next[0]}">${next[1]}</button>` : ""}
+  </div>`;
+}
+
+document.querySelectorAll(".k-tab").forEach((t) => t.onclick = () => { S.chemTab = t.dataset.tab; renderChemist(); });
+$("k-body").addEventListener("click", (e) => {
+  const o = e.target.closest("[data-open]");
+  if (o) { openViewer(Number(o.dataset.open)); return; }
+  const a = e.target.closest("[data-adv]");
+  if (a) {
+    const r = req(Number(a.dataset.adv));
+    r.status = a.dataset.to;
+    if (!r.auto) markUnread("customer");
+    renderAll();
+  }
+});
+
+/* ---------- document viewer ---------- */
+function openViewer(id) {
+  const r = req(id);
+  if (!r) return;
+  S.viewer = id;
+  if (r.status === "new") r.status = "reviewing";
+  if (r.delivery !== "seen") {
+    r.delivery = "seen";
+    if (!r.auto) { S.typing = true; markUnread("customer"); }
+  }
+  $("k-banner").classList.remove("show");
+  renderAll();
+}
+function closeViewer() {
+  const r = req(S.viewer);
+  S.viewer = null;
+  if (r && r.status === "reviewing" && !r.auto) S.typing = false;
+  renderAll();
+}
+
+function renderViewer() {
+  const el = $("viewer");
+  const r = S.viewer && req(S.viewer);
+  if (!r) { el.classList.remove("show"); el.innerHTML = ""; return; }
+  const locked = r.status !== "reviewing";
+  const reply = replyFor(r);
+  const unused = CATALOGUE.filter((m) => !r.items.some((i) => i.id === m.id));
+  const scroll = el.querySelector(".v-body") ? el.querySelector(".v-body").scrollTop : 0;
+
+  el.innerHTML = `
+    <div class="v-head">
+      <button class="back" id="v-back" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div><div class="t">${esc(r.customer)}'s prescription</div><div class="s">${esc(r.fileName)} &middot; sent ${clock(r.at)}</div></div>
+    </div>
+    <div class="v-body">
+      <div class="v-doc">${r.isPdf ? `<iframe src="${r.doc}" title="Prescription PDF"></iframe>` : `<img src="${r.doc}" alt="Prescription">`}</div>
+      <div class="v-title"><h4>Medicines on this prescription</h4><span style="font-size:12px;color:var(--text-muted);">${r.items.length} listed</span></div>
+      <div class="v-hint">${locked ? "Reply already sent." : "Mark each medicine in stock or out of stock. Fix quantities if needed."}</div>
+      ${r.items.map((i, idx) => `
+        <div class="mrow">
+          <div class="mrow-top">
+            <div class="nm"><b>${esc(med(i.id).name)}</b><span>${esc(med(i.id).unit)} &middot; ${rupees(med(i.id).price)}</span></div>
+            <div class="qty"><button data-q="-1" data-i="${idx}" ${locked ? "disabled" : ""}>−</button><span>${i.qty}</span><button data-q="1" data-i="${idx}" ${locked ? "disabled" : ""}>+</button></div>
+            ${locked ? "" : `<button class="rm" data-rm="${idx}" aria-label="Remove">✕</button>`}
+          </div>
+          <div class="stock">
+            <button class="in ${i.inStock ? "on" : ""}" data-stock="1" data-i="${idx}" ${locked ? "disabled" : ""}>In stock</button>
+            <button class="out ${!i.inStock ? "on" : ""}" data-stock="0" data-i="${idx}" ${locked ? "disabled" : ""}>Out of stock</button>
+          </div>
+        </div>`).join("")}
+      ${locked ? "" : `
+      <div class="add-row">
+        <select id="add-sel">${unused.length ? unused.map((m) => `<option value="${m.id}">${esc(m.name)} (${rupees(m.price)})</option>`).join("") : `<option>Everything is already listed</option>`}</select>
+        <button class="btn btn-outline" id="add-btn" ${unused.length ? "" : "disabled"}>Add</button>
+      </div>
+      <div class="shortcuts"><span class="lbl">Demo shortcuts</span>
+        <button data-preset="all">All in stock</button><button data-preset="some">One out of stock</button><button data-preset="none">None in stock</button>
+      </div>`}
+    </div>
+    ${locked ? "" : `<div class="v-foot">
+      <div class="preview"><div class="pl">Customer will see</div>${esc(reply.text)}</div>
+      <button class="btn btn-primary" id="v-send" ${reply.kind === "empty" ? "disabled" : ""}>Send reply to customer</button>
+    </div>`}`;
+  el.classList.add("show");
+  el.querySelector(".v-body").scrollTop = scroll;
+
+  $("v-back").onclick = closeViewer;
+  if (locked) return;
+  el.querySelectorAll("[data-q]").forEach((b) => b.onclick = () => { const it = r.items[b.dataset.i]; it.qty = Math.max(1, it.qty + Number(b.dataset.q)); renderViewer(); });
+  el.querySelectorAll("[data-stock]").forEach((b) => b.onclick = () => { r.items[b.dataset.i].inStock = b.dataset.stock === "1"; renderViewer(); });
+  el.querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { r.items.splice(Number(b.dataset.rm), 1); renderViewer(); });
+  el.querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
+    r.items.forEach((it, k) => { it.inStock = b.dataset.preset === "all" ? true : b.dataset.preset === "none" ? false : k !== r.items.length - 1; });
+    renderViewer();
+  });
+  $("add-btn").onclick = () => { r.items.push({ id: Number($("add-sel").value), qty: 1, inStock: true }); renderViewer(); };
+  $("v-send").onclick = () => sendReply(r);
+}
+
+function sendReply(r) {
+  const reply = replyFor(r);
+  if (reply.kind === "empty") return;
+  S.viewer = null;
+  r.mode = reply.kind;
+  if (reply.kind === "none") {
+    r.status = "closed_unavailable";
+    r.log.push("You replied: not available. Request closed.");
+  } else {
+    r.status = "awaiting_customer";
+    r.log.push(reply.kind === "all" ? "You replied: all available. Waiting for the customer to pay." : `You replied: ${avail(r).length} of ${r.items.length} available. Waiting for the customer's answer.`);
+  }
+
+  if (r.auto) {
+    // Ananya isn't on screen, so her replies are scripted.
+    if (reply.kind === "none") afterClose(r);
+    else later(2600, () => { payMethod = "cod"; confirmOrder(r, "auto"); payMethod = "upi"; });
+    renderAll();
+    return;
+  }
+
+  S.typing = false;
+  if (reply.kind === "none") {
+    S.thread.push({ from: "chem", kind: "text", text: reply.text, sorry: true });
+    S.thread.push({ from: "sys", text: "Request closed. You can send another prescription any time." });
+    afterClose(r);
+  } else {
+    S.thread.push({ from: "chem", kind: "text", text: reply.text });
+    S.thread.push({ from: "chem", kind: "offer", reqId: r.id });
+  }
+  markUnread("customer");
+  renderAll();
+}
+
+// When a request leaves the chemist's hands, point them at the next one.
+function afterClose(r) {
+  const next = S.reqs.filter((x) => x.status === "new" && x.id !== r.id).sort((a, b) => a.at - b.at)[0];
+  if (next) later(500, () => {
+    const el = $("k-banner");
+    el.innerHTML = `<div class="avatar" style="width:36px;height:36px;font-size:12.5px;">${next.initials}</div>
+      <div><div class="tt">Moving on: ${esc(next.customer)}</div><div class="ss">Next prescription in your queue</div></div><span class="go">View</span>`;
+    el.dataset.req = next.id;
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove("show"), 5000);
+  });
+}
+
+/* ============================================================
+   Shell
+   ============================================================ */
+function renderAll() { renderThread(); renderChemist(); renderViewer(); }
+
+function setPanel(p) {
+  S.panel = p;
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.panel === p));
+  $("dev-customer").classList.toggle("on", p === "customer");
+  $("dev-chemist").classList.toggle("on", p === "chemist");
+  $("dot-" + p).classList.remove("show");
+  // The chat can't scroll while its tab is hidden, so catch up to the newest message on return.
+  if (p === "customer") {
+    const t = $("thread");
+    t.style.scrollBehavior = "auto";
+    t.scrollTop = t.scrollHeight;
+    t.style.scrollBehavior = "";
+  }
+}
+document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => setPanel(b.dataset.panel));
+
+function reset() {
+  timers.forEach(clearTimeout); timers.clear();
+  pick = null; payMethod = "upi";
+  S = freshState();
+  shownCount = 0; typingShown = false; seenCards.clear();
+  closeSheet();
+  $("k-banner").classList.remove("show");
+  ["customer", "chemist"].forEach((p) => $("dot-" + p).classList.remove("show"));
+  setPanel(window.matchMedia("(max-width: 860px)").matches ? S.panel : "customer");
+  renderAll();
+}
+$("reset").onclick = reset;
+reset();
+</script>
+</body>
+</html>

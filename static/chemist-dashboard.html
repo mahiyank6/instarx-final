@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chemist Dashboard — InstaRX</title>
+<link rel="icon" href="/img/favicon.ico" sizes="any">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -26,6 +27,11 @@
 
 <section class="section">
   <div class="container">
+    <div class="rx-desk" id="documents">
+      <div class="section-title"><h2>Prescriptions to review <span class="rx-count" id="rx-count"></span></h2></div>
+      <div class="rx-list" id="rx-list"></div>
+    </div>
+
     <div class="split-grid">
       <div>
         <div class="section-title"><h2>Incoming Order Requests</h2></div>
@@ -41,7 +47,12 @@
 
 <div id="site-footer"></div>
 
+<!-- prescription document viewer -->
+<div class="rxv-backdrop" id="rx-viewer" hidden></div>
+
+<script src="/js/illustrations.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/chemist.js"></script>
+<script src="/js/chemist-rx.js"></script>
 </body>
 </html>

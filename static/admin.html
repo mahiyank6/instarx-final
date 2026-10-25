@@ -3,71 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Server Data — InstaRX Admin</title>
+<meta name="theme-color" content="#03045E">
+<title>User Database — InstaRX</title>
+<link rel="icon" href="/img/favicon.ico" sizes="any">
 <link rel="stylesheet" href="/css/style.css">
 <style>
-  .admin-shell { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
-  .admin-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
-  .admin-top h1 { margin: 0 0 4px; font-size: 24px; }
+  .admin-shell { max-width: 1240px; margin: 0 auto; padding: 26px 20px 70px; }
+  .admin-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 6px; }
+  .admin-top h1 { margin: 0 0 5px; font-size: 26px; color: var(--navy); }
   .admin-sub { color: var(--text-muted); font-size: 13px; }
-  .admin-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 18px 0 26px; }
-  .stat-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 20px; min-width: 130px; }
-  .stat-card .num { font-size: 26px; font-weight: 800; color: var(--primary-dark); }
-  .stat-card .lbl { font-size: 12px; color: var(--text-muted); }
-  .admin-table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 30px; }
-  table.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.admin-table th { text-align: left; background: var(--primary); color: #fff; padding: 10px 14px; white-space: nowrap; font-weight: 700; }
-  table.admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  table.admin-table tr:last-child td { border-bottom: none; }
-  table.admin-table tr:nth-child(even) td { background: var(--surface-warm); }
-  .role-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-  .role-pill.customer { background: #E0ECFB; color: #2255A4; }
-  .role-pill.chemist { background: #FFE7D3; color: var(--primary-dark); }
-  .mono { font-family: Consolas, monospace; font-size: 12px; }
-  #refresh-btn { margin-left: auto; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 13px; margin: 22px 0 28px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; box-shadow: var(--shadow-sm);
+  }
+  .stat .stat-num { font-size: 27px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+  .stat .lbl { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  .user-block {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm);
+  }
+  .user-head {
+    display: flex; align-items: center; gap: 14px; padding: 16px 18px; cursor: pointer;
+    transition: background .18s;
+  }
+  .user-head:hover { background: var(--ice-50); }
+  .user-av {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;
+    font-family: Sora, sans-serif; background: linear-gradient(135deg, var(--cyan), var(--primary));
+  }
+  .user-av.chemist { background: linear-gradient(135deg, var(--sky), var(--blue-800)); }
+  .user-main { flex: 1; min-width: 0; }
+  .user-name { font-weight: 700; font-size: 15px; color: var(--navy); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .user-mail { font-size: 12.5px; color: var(--text-muted); font-family: Consolas, monospace; margin-top: 2px; }
+  .user-right { text-align: right; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+  .user-right b { display: block; font-size: 17px; color: var(--navy); font-family: Sora, sans-serif; }
+  .caret { color: var(--text-muted); font-size: 13px; transition: transform .22s var(--ease); flex-shrink: 0; }
+  .user-block.open .caret { transform: rotate(90deg); }
+
+  .user-body { display: none; border-top: 1px solid var(--border); padding: 16px 18px 18px; background: var(--ice-50); }
+  .user-block.open .user-body { display: block; animation: fade-up .25s var(--ease); }
+
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 11px; margin-bottom: 16px; }
+  .kv div { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 13px; }
+  .kv .k { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kv .v { font-size: 13.5px; font-weight: 600; color: var(--text); margin-top: 3px; word-break: break-word; }
+
+  .ord { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 15px; margin-bottom: 10px; }
+  .ord-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ord-id { font-weight: 700; font-size: 13.5px; color: var(--navy); }
+  .ord-items { list-style: none; padding: 0; margin: 0; }
+  .ord-items li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 5px 0; border-bottom: 1px dashed var(--border); color: var(--text); }
+  .ord-items li:last-child { border-bottom: none; }
+  .ord-items .q { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .ord-foot { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-muted); margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .mono { font-family: Consolas, monospace; }
+  .pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+  .pill.cust { background: #E3F2FD; color: var(--primary); }
+  .pill.chem { background: var(--sky-200); color: var(--blue-800); }
+  .pill.ok   { background: var(--green-tint); color: var(--green); }
+  .pill.no   { background: #FFF4E5; color: #A86400; }
+  .pill.lock { background: var(--danger-tint); color: var(--danger); }
+  .hint { font-size: 12px; color: var(--text-muted); background: var(--ice-50); border: 1px solid var(--ice); border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 20px; }
 </style>
 </head>
-<body style="background:var(--bg);">
+<body>
 
 <div class="admin-shell">
   <div class="admin-top">
     <div>
-      <h1>📊 Live Server Data</h1>
-      <div class="admin-sub">Reads directly from <span class="mono">server/data.json</span> on this machine. For local project use only — not secured for public/internet use.</div>
+      <h1>User Database</h1>
+      <div class="admin-sub">
+        <span class="live-dot"></span>Live — refreshes every 5s. Reads <span class="mono">server/data.json</span>.
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="admin-sub" id="last-updated">Loading…</span>
-      <button class="btn btn-primary btn-sm" id="refresh-btn">Refresh Now</button>
+      <button class="btn btn-primary btn-sm" id="refresh-btn">Refresh now</button>
     </div>
   </div>
 
-  <div class="admin-stats" id="stats"></div>
-
-  <h3>Registered Accounts</h3>
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Phone</th><th>Signed Up</th></tr></thead>
-      <tbody id="users-body"></tbody>
-    </table>
+  <div class="hint">
+    Passwords are stored as one-way hashes and are deliberately not shown — not even here.
+    Nobody, including this page, can read a user's actual password back out.
+    Click any user to expand their full record and every product they've ordered.
   </div>
 
-  <h3>Chemist Shops</h3>
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead><tr><th>Shop Name</th><th>Owner Account</th><th>Address</th><th>Online?</th><th>License No.</th></tr></thead>
-      <tbody id="chemists-body"></tbody>
-    </table>
-  </div>
-
-  <h3>Orders</h3>
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead><tr><th>ID</th><th>Customer</th><th>Chemist</th><th>Status</th><th>Total</th><th>OTP</th><th>Placed At</th></tr></thead>
-      <tbody id="orders-body"></tbody>
-    </table>
-  </div>
+  <div class="stats" id="stats"></div>
+  <div id="users-list"></div>
 </div>
 
+<script src="/js/illustrations.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/admin.js"></script>
 </body>

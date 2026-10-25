@@ -1,0 +1,19 @@
+
+1. Accounts and security
+
+2. Catalogue and cart
+
+3. Orders and delivery
+
+4. Prescription chat
+
+5. Reading medicines from prescription text (JavaScript)
+
+==============================================================
+1. Accounts and security                                   19/19
+2. Catalogue and cart                                      12/12
+3. Orders and delivery                                     17/17
+4. Prescription chat                                       37/37
+5. Reading medicines from prescription text (JavaScript)   11/11
+--------------------------------------------------------------
+TOTAL                                                      96/96

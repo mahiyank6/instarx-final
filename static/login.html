@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login / Signup — InstaRX</title>
+<meta name="theme-color" content="#03045E">
+<title>Log in or sign up — InstaRX</title>
+<link rel="icon" href="/img/favicon.ico" sizes="any">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,69 +13,128 @@
 <div id="site-header"></div>
 
 <div class="auth-shell">
-  <div class="auth-card">
-    <div class="role-toggle" id="mode-toggle">
-      <button type="button" data-mode="login" class="active">Login</button>
-      <button type="button" data-mode="signup">Sign Up</button>
+  <div class="auth-card reveal">
+
+    <!-- ---------- login / signup ---------- -->
+    <div id="auth-pane">
+      <div class="role-toggle" id="mode-toggle">
+        <button type="button" data-mode="login" class="active">Log in</button>
+        <button type="button" data-mode="signup">Sign up</button>
+      </div>
+
+      <div id="role-toggle-wrap" class="role-toggle" style="display:none;">
+        <button type="button" data-role="customer" class="active">I'm a customer</button>
+        <button type="button" data-role="chemist">I'm a chemist</button>
+      </div>
+
+      <h2 id="form-title">Welcome back</h2>
+      <p id="form-sub" style="margin:-6px 0 20px;font-size:13.5px;color:var(--text-muted);">
+        Log in to order from chemists near you.
+      </p>
+
+      <div id="form-error" class="form-error" style="display:none;"></div>
+
+      <form id="auth-form" autocomplete="on">
+        <div class="field signup-only" style="display:none;">
+          <label>Full name</label>
+          <input type="text" name="name" placeholder="e.g. Rohit Kumar" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email" required placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field signup-only" style="display:none;">
+          <label>Phone</label>
+          <input type="tel" name="phone" placeholder="10-digit mobile number" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" name="password" id="pw-input" required placeholder="At least 8 characters" autocomplete="current-password">
+            <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Show password" aria-pressed="false" title="Show password">
+              <svg class="eye-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a17.5 17.5 0 0 1 4.1-4.9M9.9 5.2A9.8 9.8 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.2 3.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="remember-row" id="remember-wrap">
+          <input type="checkbox" id="remember-me" checked>
+          <label for="remember-me" style="margin:0;font-weight:500;cursor:pointer;">
+            Keep me logged in on this device
+          </label>
+        </div>
+
+        <div id="chemist-fields" style="display:none;">
+          <div class="form-note">
+            Chemist accounts need shop details. Once verified, switch yourself online to start
+            receiving orders from nearby customers.
+          </div>
+          <div class="field">
+            <label>Shop name</label>
+            <input type="text" name="shop_name" placeholder="e.g. Priya's Medical Store">
+          </div>
+          <div class="field">
+            <label>Drug licence number</label>
+            <input type="text" name="license_no" placeholder="e.g. MH-PH-1234">
+          </div>
+          <div class="field">
+            <label>Shop address</label>
+            <input type="text" name="address" placeholder="Street, area, city">
+          </div>
+          <div class="field">
+            <button type="button" id="use-location-btn" class="btn btn-outline btn-sm">
+              📍 Use my current location
+            </button>
+            <div id="location-status" style="font-size:12.5px;color:var(--text-muted);margin-top:7px;"></div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Log in</button>
+      </form>
+
+      <div class="switch-link" id="switch-wrap">
+        New to InstaRX? <a href="#" id="switch-link">Create an account</a>
+      </div>
     </div>
 
-    <div id="role-toggle-wrap" class="role-toggle" style="display:none;">
-      <button type="button" data-role="customer" class="active">I'm a Customer</button>
-      <button type="button" data-role="chemist">I'm a Chemist</button>
+    <!-- ---------- email verification ---------- -->
+    <div id="verify-pane" style="display:none;">
+      <div class="verify-icon">✉️</div>
+      <h2 style="text-align:center;margin-bottom:6px;">Check your email</h2>
+      <p style="text-align:center;font-size:13.5px;color:var(--text-muted);margin:0 0 18px;">
+        Enter the 6-digit code we sent to<br><b id="verify-email" style="color:var(--text);"></b>
+      </p>
+
+      <div id="dev-code-box" class="form-note" style="display:none;text-align:center;"></div>
+      <div id="verify-error" class="form-error" style="display:none;"></div>
+
+      <form id="verify-form">
+        <div class="otp-inputs">
+          <input class="otp-input" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+          <input class="otp-input" inputmode="numeric" maxlength="1">
+          <input class="otp-input" inputmode="numeric" maxlength="1">
+          <input class="otp-input" inputmode="numeric" maxlength="1">
+          <input class="otp-input" inputmode="numeric" maxlength="1">
+          <input class="otp-input" inputmode="numeric" maxlength="1">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="verify-btn">Verify &amp; continue</button>
+      </form>
+
+      <div class="switch-link">
+        <button type="button" class="btn btn-ghost btn-sm" id="resend-btn">Resend code</button>
+      </div>
+      <div class="switch-link">
+        <a href="#" id="verify-back">← Back to log in</a>
+      </div>
     </div>
 
-    <h2 id="form-title">Welcome back</h2>
-    <div id="form-error" class="form-error" style="display:none;"></div>
-
-    <form id="auth-form">
-      <div class="field signup-only" style="display:none;">
-        <label>Full Name / Shop Owner Name</label>
-        <input type="text" name="name" placeholder="e.g. Rohit Kumar">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" name="email" required placeholder="you@example.com">
-      </div>
-      <div class="field signup-only" style="display:none;">
-        <label>Phone</label>
-        <input type="tel" name="phone" placeholder="10-digit mobile number">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" name="password" required minlength="4" placeholder="At least 4 characters">
-      </div>
-
-      <div id="chemist-fields" style="display:none;">
-        <div class="form-note">Chemist accounts need shop details — orders from nearby customers will be routed to you once you're online.</div>
-        <div class="field">
-          <label>Shop Name</label>
-          <input type="text" name="shop_name" placeholder="e.g. Priya's Medical Store">
-        </div>
-        <div class="field">
-          <label>Drug License Number</label>
-          <input type="text" name="license_no" placeholder="e.g. MH-PH-1234">
-        </div>
-        <div class="field">
-          <label>Shop Address</label>
-          <input type="text" name="address" placeholder="Street, area, city">
-        </div>
-        <div class="field">
-          <button type="button" id="use-location-btn" class="btn btn-outline btn-sm">📍 Use My Current Location</button>
-          <div id="location-status" style="font-size:12.5px;color:var(--text-muted);margin-top:6px;"></div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Login</button>
-    </form>
-
-    <div class="switch-link">
-      <span id="switch-text">New to InstaRX? <a href="#" id="switch-link">Create an account</a></span>
-    </div>
   </div>
 </div>
 
 <div id="site-footer"></div>
 
+<script src="/js/illustrations.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/auth.js"></script>
 </body>

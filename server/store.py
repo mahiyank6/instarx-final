@@ -18,7 +18,8 @@ _DEFAULT = {
     "medicines": [],
     "orders": [],
     "carts": {},
-    "next_id": {"user": 1, "order": 1}
+    "rx_requests": [],
+    "next_id": {"user": 1, "order": 1, "rx": 1}
 }
 
 
@@ -26,7 +27,13 @@ def _load():
     if not os.path.exists(DATA_FILE):
         return json.loads(json.dumps(_DEFAULT))
     with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    # Files written before a collection existed (e.g. rx_requests) get it
+    # added empty instead of crashing on a missing key.
+    for key, default in _DEFAULT.items():
+        if key not in data:
+            data[key] = json.loads(json.dumps(default))
+    return data
 
 
 def _save(data):

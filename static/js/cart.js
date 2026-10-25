@@ -26,36 +26,27 @@ async function loadCart() {
     panel.innerHTML = `<div class="empty-state">Couldn't load your cart.</div>`;
     return;
   }
-  const pendingRx = localStorage.getItem("instarx_pending_prescription");
-  if (!cartData.items.length && !pendingRx) {
+  if (!cartData.items.length) {
     panel.innerHTML = `<div class="empty-state"><div class="big-emoji">🛒</div>Your cart is empty.<br><a href="/category.html" class="btn btn-primary" style="margin-top:14px;">Browse Medicines</a></div>`;
     document.getElementById("place-order-btn").disabled = true;
   } else {
-    let html = cartData.items.map((line) => `
+    const html = cartData.items.map((line) => `
       <div class="cart-line" data-id="${line.medicine.id}">
         ${productThumbHtml(line.medicine)}
         <div class="info">
-          <div style="font-weight:700;font-size:14px;">${escapeHtml(line.medicine.name)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${currency(line.medicine.price)} each</div>
+          <div class="line-name">${escapeHtml(line.medicine.name)}</div>
+          <div class="line-price">${currency(line.medicine.price)} each</div>
         </div>
         <div class="qty-control">
-          <button data-action="dec">−</button>
+          <button data-action="dec" aria-label="Decrease quantity">−</button>
           <span>${line.qty}</span>
-          <button data-action="inc">+</button>
+          <button data-action="inc" aria-label="Increase quantity">+</button>
         </div>
-        <div style="font-weight:700;width:70px;text-align:right;">${currency(line.subtotal)}</div>
-        <button class="btn btn-ghost btn-sm" data-action="remove">✕</button>
+        <div class="line-total">${currency(line.subtotal)}</div>
+        <button class="line-remove" data-action="remove" aria-label="Remove ${escapeHtml(line.medicine.name)}">✕</button>
       </div>`).join("");
-    if (pendingRx) {
-      html += `<div class="cart-line"><div class="thumb">📄</div><div class="info"><div style="font-weight:700;font-size:14px;">Uploaded prescription attached</div><div style="font-size:12px;color:var(--text-muted);">Chemist will confirm items & price</div></div><button class="btn btn-ghost btn-sm" id="remove-rx">✕</button></div>`;
-    }
     panel.innerHTML = html;
     wireCartControls(panel);
-    const removeRx = document.getElementById("remove-rx");
-    if (removeRx) removeRx.addEventListener("click", () => {
-      localStorage.removeItem("instarx_pending_prescription");
-      loadCart(); renderSummary();
-    });
   }
   renderSummary();
 }
@@ -90,7 +81,7 @@ function renderSummary() {
     <div class="summary-row"><span>Item Total</span><span>${currency(total)}</span></div>
     <div class="summary-row"><span>Delivery</span><span>${deliveryNote}</span></div>
     <div class="summary-row total"><span>To Pay</span><span>${currency(total + deliveryFee)}</span></div>
-    <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Chemist may add a personal transport charge when your order goes out for delivery.</div>
+    <div class="summary-note">Chemist may add a personal transport charge when your order goes out for delivery.</div>
   `;
 }
 
@@ -98,12 +89,15 @@ function renderAddressBlock() {
   const el = document.getElementById("address-block");
   const addr = getSavedAddress();
   el.innerHTML = `
-    ${addr ? `<div style="font-size:13.5px;margin-bottom:10px;">📍 ${escapeHtml(addr.label)}</div>` : `<div class="form-note">No address set yet.</div>`}
-    <button class="btn btn-outline btn-sm btn-block" id="redetect-btn">📍 Use My Current Location</button>
-    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin:10px 0 6px;">or enter it manually</div>
-    <div style="display:flex;gap:6px;">
-      <input type="text" id="manual-address-input" placeholder="Street, area, city" style="flex:1;padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;">
-      <button class="btn btn-primary btn-sm" id="manual-address-btn">Set</button>
+    ${addr ? `<div class="addr-current"><span class="addr-current-pin">📍</span><span>${escapeHtml(addr.label)}</span></div>` : `<div class="form-note">No address set yet.</div>`}
+    <button class="btn btn-outline btn-block" id="redetect-btn">📍 Use My Current Location</button>
+    <div class="addr-or">or search for it</div>
+    <div class="addr-search">
+      <div class="addr-input-row">
+        <input type="text" id="manual-address-input" placeholder="Building, area, city" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="search">
+        <button class="btn btn-primary" id="manual-address-btn">Set</button>
+      </div>
+      <div class="addr-suggest" id="addr-suggest"></div>
     </div>
   `;
   document.getElementById("redetect-btn").addEventListener("click", async () => {
@@ -114,17 +108,12 @@ function renderAddressBlock() {
       toast("Address updated");
     } catch (e) { toast("Location access denied — enter your address manually below"); }
   });
-  document.getElementById("manual-address-btn").addEventListener("click", async () => {
-    const input = document.getElementById("manual-address-input");
-    const query = input.value.trim();
-    if (!query) { toast("Type an address first"); return; }
-    try {
-      const addr = await geocodeAddress(query);
-      saveAddress(addr);
-      renderAddressBlock();
-      toast("Address set");
-    } catch (e) { toast(e.message); }
+  const search = attachAddressSearch({
+    input: document.getElementById("manual-address-input"),
+    list: document.getElementById("addr-suggest"),
+    onPick: (addr) => { saveAddress(addr); renderAddressBlock(); renderHeader(); toast("Address set"); },
   });
+  document.getElementById("manual-address-btn").addEventListener("click", search.submit);
 }
 
 async function placeOrder() {

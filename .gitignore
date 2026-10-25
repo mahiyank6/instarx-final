@@ -12,3 +12,7 @@ __pycache__/
 # uploaded prescription files (user content, not app code)
 server/uploads/*
 !server/uploads/.gitkeep
+
+# live data (accounts, orders, chats): never commit; the app rebuilds demo data from seed.py
+server/data.json
+server/data.json.tmp

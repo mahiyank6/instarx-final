@@ -1,0 +1,17 @@
+{
+  "name": "InstaRX — Medicine Delivery",
+  "short_name": "InstaRX",
+  "description": "Order medicines from your nearest verified local chemist, delivered in minutes.",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#03045E",
+  "theme_color": "#03045E",
+  "categories": ["health", "medical", "shopping"],
+  "icons": [
+    { "src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -35,6 +35,7 @@ function updateOnlineLabel(online) {
 }
 
 async function refresh() {
+  loadRx();
   loadIncoming();
   // Don't blow away the driver-name/charge/OTP fields while the chemist is
   // actively typing into them — the 4s poll was wiping keystrokes mid-type.
@@ -59,7 +60,7 @@ async function loadIncoming() {
         </div>
         <div style="font-size:13px;">${escapeHtml(o.customer_name)} · ${o.address && o.address.label ? escapeHtml(truncate(o.address.label, 50)) : "Address unavailable"}</div>
         ${o.items.length ? `<ul>${o.items.map((i) => `<li>${escapeHtml(i.name)} × ${i.qty}</li>`).join("")}</ul>` : `<div style="font-size:13px;color:var(--text-muted);margin:8px 0;">📄 Prescription order — review attached file before pricing.</div>`}
-        ${o.prescription_file ? `<a href="/uploads/${encodeURIComponent(o.prescription_file)}" target="_blank" style="font-size:12.5px;color:var(--primary-dark);font-weight:700;">View Prescription →</a>` : ""}
+        ${o.prescription_file ? `<a href="/uploads/${encodeURIComponent(o.prescription_file)}" target="_blank" style="font-size:12.5px;color:var(--primary);font-weight:700;">View Prescription →</a>` : ""}
         <div style="font-weight:700;margin-top:6px;">Order value: ${currency(o.total)}</div>
         <div class="order-actions">
           <button class="btn btn-primary btn-sm accept-btn" data-id="${o.id}">Accept Order</button>
@@ -118,8 +119,9 @@ async function loadMine() {
           <b>Order #${o.id}</b>
           <span class="badge ${o.status}">${STATUS_LABELS[o.status]}</span>
         </div>
-        <div style="font-size:13px;">${escapeHtml(o.customer_name)}</div>
+        <div style="font-size:13px;">${escapeHtml(o.customer_name)}${o.rx_request_id ? " · from prescription" : ""}</div>
         ${o.items.length ? `<ul>${o.items.map((i) => `<li>${escapeHtml(i.name)} × ${i.qty}</li>`).join("")}</ul>` : ""}
+        ${o.prescription_file ? `<a href="/uploads/${encodeURIComponent(o.prescription_file)}" target="_blank" style="display:inline-block;margin-bottom:8px;font-size:12.5px;color:var(--primary);font-weight:700;">View prescription →</a>` : ""}
         <div style="font-weight:700;">${currency(o.total)}${o.delivery_charge ? ` + ${currency(o.delivery_charge)} delivery` : ""}</div>
         <div class="order-actions">${actionHtml}</div>
       </div>`;
