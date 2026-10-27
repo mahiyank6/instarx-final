@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InstaRX - Medicines delivered in 10 minutes</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; font-family: "Segoe UI", Arial, sans-serif; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+  #boot { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          background: linear-gradient(160deg, #0a1f4d 0%, #0a66c2 60%, #29b6f6 100%); color: #fff; text-align: center; padding: 24px; }
+  #boot h1 { font-size: 44px; margin: 0 0 6px; letter-spacing: .5px; }
+  #boot h1 span { color: #8fe3ff; }
+  #boot p { margin: 0 0 22px; color: #d6e8ff; font-size: 15px; }
+  .bar { width: min(320px, 70vw); height: 6px; background: rgba(255,255,255,.25); border-radius: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 35%; background: #fff; border-radius: 6px; animation: slide 1.2s ease-in-out infinite; }
+  @keyframes slide { 0% { margin-left: -35%; } 100% { margin-left: 100%; } }
+  #status { margin-top: 16px; font-size: 13px; color: #cfe3ff; min-height: 18px; }
+  #fail { display: none; margin-top: 18px; max-width: 420px; font-size: 14px; background: rgba(0,0,0,.25); padding: 12px 14px; border-radius: 10px; }
+  #fail button { margin-top: 10px; border: 0; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="boot">
+  <h1>Insta<span>RX</span></h1>
+  <p>Fast relief is what matters the most</p>
+  <div class="bar"><i></i></div>
+  <div id="status">Starting the InstaRX server in your browser...</div>
+  <div id="fail"></div>
+</div>
+<iframe id="view" title="InstaRX" allow="geolocation; clipboard-write"></iframe>
+
+<script id="pack" type="application/json">/*__PACK__*/</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script>
+(function () {
+  "use strict";
+  var pack = JSON.parse(document.getElementById("pack").textContent);
+  var view = document.getElementById("view");
+  var statusEl = document.getElementById("status");
+  var py = null, handlePy = null, dumpPy = null;
+  var blobFor = {};
+  var currentSearch = "";
+
+  function say(t) { statusEl.textContent = t; }
+
+  /* ---- static assets become blob: URLs (images and icons) ---- */
+  Object.keys(pack.assets).forEach(function (p) {
+    var a = pack.assets[p];
+    var bin = atob(a.b64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    blobFor[p] = URL.createObjectURL(new Blob([arr], { type: a.type }));
+  });
+  function fixAssets(text) {
+    return text.replace(/(?<=["'(`=\s])\/(?:img|media)\/[A-Za-z0-9_\-.\/%]+/g, function (m) { return blobFor[m] || m; });
+  }
+
+  /* ---- saved browser state (accounts, orders, chats live in this browser only) ---- */
+  function idb() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open("instarx-standalone", 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore("kv"); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function idbGet(k) {
+    return idb().then(function (db) {
+      return new Promise(function (res) {
+        var q = db.transaction("kv").objectStore("kv").get(k);
+        q.onsuccess = function () { res(q.result); };
+        q.onerror = function () { res(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function idbSet(k, v) {
+    return idb().then(function (db) {
+      return new Promise(function (res) {
+        var t = db.transaction("kv", "readwrite");
+        t.objectStore("kv").put(v, k);
+        t.oncomplete = res; t.onerror = res;
+      });
+    }).catch(function () {});
+  }
+  var persistTimer = null;
+  function schedulePersist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(function () { try { idbSet("state", JSON.parse(dumpPy())); } catch (e) {} }, 400);
+  }
+  window.__resetInstarx = function () { idbSet("state", null).then(function () { location.reload(); }); };
+
+  /* ---- the bridge: fetch("/api/...") from the pages runs the real Flask app ---- */
+  function b64ToBytes(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  window.__vraw = async function (url, opts) {
+    opts = opts || {};
+    var method = (opts.method || "GET").toUpperCase();
+    var headers = {};
+    var h = opts.headers;
+    if (h) {
+      if (typeof h.forEach === "function" && !Array.isArray(h)) h.forEach(function (v, k) { headers[k] = v; });
+      else Object.keys(h).forEach(function (k) { headers[k] = h[k]; });
+    }
+    var body = null, parts = null, raw = null;
+    if (opts.rawB64) {
+      raw = "/tmp/raw" + (opts.sid || "main");
+      py.FS.writeFile(raw, b64ToBytes(opts.rawB64));
+    } else if (opts.body && typeof opts.body === "object" && typeof opts.body.entries === "function") {
+      parts = []; var n = 0;
+      for (var pair of opts.body.entries()) {
+        var k = pair[0], v = pair[1];
+        if (v && typeof v === "object" && typeof v.arrayBuffer === "function") {
+          var path = "/tmp/up" + (n++);
+          py.FS.writeFile(path, new Uint8Array(await v.arrayBuffer()));
+          parts.push({ name: k, file: path, filename: v.name || "file", type: v.type || "application/octet-stream" });
+        } else parts.push({ name: k, value: String(v) });
+      }
+      delete headers["Content-Type"]; delete headers["content-type"];
+    } else if (typeof opts.body === "string") body = opts.body;
+    var out = JSON.parse(handlePy(JSON.stringify({ method: method, path: url, headers: headers, body: body, parts: parts, raw: raw, sid: opts.sid || null })));
+    if (method !== "GET") schedulePersist();
+    return out;
+  };
+  window.__vfetch = async function (url, opts, win) {
+    var out = await window.__vraw(url, opts);
+    var bytes = b64ToBytes(out.body), ct = out.headers["Content-Type"] || "";
+    var payload = bytes;
+    if (/json|html|text/.test(ct)) payload = fixAssets(new TextDecoder().decode(bytes));
+    var nullBody = out.status === 204 || out.status === 205 || out.status === 304;
+    return new win.Response(nullBody ? null : payload, { status: out.status, headers: { "Content-Type": ct } });
+  };
+  var uploadBlobs = {};
+  window.__uploadUrl = function (path) {
+    if (uploadBlobs[path]) return Promise.resolve(uploadBlobs[path]);
+    return window.__vfetch(path, {}, window)
+      .then(function (r) { return r.ok ? r.blob() : Promise.reject(); })
+      .then(function (b) { uploadBlobs[path] = URL.createObjectURL(b); return uploadBlobs[path]; });
+  };
+
+  /* ---- page loader: "/cart.html?x=1" shows the stored page inside the frame ---- */
+  var SHIM = "(" + function () {
+    var P = parent;
+    window.__go = function (u) { P.__navigate(String(u)); };
+    window.__search = function () { return P.__currentSearch(); };
+    var realFetch = window.fetch.bind(window);
+    window.fetch = function (u, o) {
+      var s = typeof u === "string" ? u : (u && u.url) || "";
+      if (s.charAt(0) === "/" && s.charAt(1) !== "/") return P.__vfetch(s, o || {}, window);
+      return realFetch(u, o);
+    };
+    document.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a) return;
+      var href = a.getAttribute("href");
+      if (!href || href.charAt(0) === "#" || /^(https?:|mailto:|tel:|blob:|data:|javascript:)/i.test(href)) return;
+      e.preventDefault();
+      if (href.indexOf("/uploads/") === 0) { P.__uploadUrl(href).then(function (u) { window.open(u, "_blank"); }); return; }
+      P.__navigate(href);
+    }, true);
+    var SEL = 'img[src^="/uploads/"],embed[src^="/uploads/"],iframe[src^="/uploads/"],object[data^="/uploads/"]';
+    function fixUploads(root) {
+      if (!root || !root.querySelectorAll) return;
+      var list = Array.prototype.slice.call(root.querySelectorAll(SEL));
+      if (root.matches && root.matches(SEL)) list.push(root);
+      list.forEach(function (el) {
+        var attr = el.tagName === "OBJECT" ? "data" : "src";
+        var src = el.getAttribute(attr);
+        P.__uploadUrl(src).then(function (u) { el.setAttribute(attr, u); }, function () {});
+      });
+    }
+    new MutationObserver(function (muts) {
+      muts.forEach(function (m) {
+        if (m.type === "attributes") fixUploads(m.target);
+        Array.prototype.forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1) fixUploads(n); });
+      });
+    }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "data"] });
+  }.toString() + ")();";
+
+  function pageHtml(name) {
+    var h = pack.pages[name];
+    h = h.replace(/<link\b[^>]*href="\/css\/([^"]+)"[^>]*>/g, function (m, f) { return "<style>" + pack.files["css/" + f] + "</style>"; });
+    h = h.replace(/<script\b[^>]*src="\/js\/([^"]+)"[^>]*><\/script>/g, function (m, f) {
+      return "<script>" + pack.files["js/" + f].replace(/<\/script/gi, "<\\/script") + "<\/script>";
+    });
+    h = h.replace(/<link[^>]*rel="manifest"[^>]*>/g, "");
+    h = fixAssets(h);
+    return h.replace(/<head[^>]*>/i, function (m) { return m + "<script>" + SHIM + "<\/script>"; });
+  }
+  window.__currentSearch = function () { return currentSearch; };
+  window.__navigate = function (u) {
+    var url = new URL(u, "http://app.local/");
+    var path = url.pathname.replace(/^\//, "");
+    if (path === "" || !pack.pages[path]) path = "index.html";
+    currentSearch = url.search || "";
+    var title = (pack.pages[path].match(/<title>([^<]*)<\/title>/i) || [])[1];
+    if (title) document.title = title;
+    view.srcdoc = pageHtml(path);
+  };
+
+  /* ---- start ---- */
+  async function boot() {
+    try {
+      say("Loading the Python runtime (first visit takes a few seconds)...");
+      py = await loadPyodide();
+      say("Installing the server (Flask)...");
+      await py.loadPackage(["micropip", "ssl"]);
+      await py.runPythonAsync("import micropip\nawait micropip.install(['flask'])");
+      say("Starting InstaRX...");
+      py.FS.mkdirTree("/srv/server/uploads");
+      Object.keys(pack.py).forEach(function (n) { py.FS.writeFile("/srv/server/" + n, pack.py[n]); });
+      /* the server only checks that each photo file exists; the real bytes are served as blob: URLs */
+      Object.keys(pack.assets).forEach(function (p) {
+        var dir = "/srv/static" + p.substring(0, p.lastIndexOf("/"));
+        py.FS.mkdirTree(dir);
+        py.FS.writeFile("/srv/static" + p, "");
+      });
+      var saved = await idbGet("state");
+      if (saved && saved.data) {
+        py.FS.writeFile("/srv/server/data.json", saved.data);
+        Object.keys(saved.uploads || {}).forEach(function (n) { py.FS.writeFile("/srv/server/uploads/" + n, b64ToBytes(saved.uploads[n])); });
+      }
+      py.runPython(pack.boot);
+      window.__py = py;
+      handlePy = py.globals.get("handle");
+      dumpPy = py.globals.get("dump");
+      if (saved && saved.cookie) py.globals.get("restore_cookie")(saved.cookie);
+      view.addEventListener("load", function once() { view.removeEventListener("load", once); document.getElementById("boot").style.display = "none"; });
+      window.__navigate("/");
+    } catch (e) {
+      console.error(e);
+      document.querySelector(".bar").style.display = "none";
+      say("");
+      var f = document.getElementById("fail");
+      f.style.display = "block";
+      f.innerHTML = "Could not start the server in this browser. Check your internet connection (the Python runtime loads from a CDN) and try again.<br><button onclick=\"location.reload()\">Try again</button>";
+    }
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -160,3 +160,15 @@ NOTES
 - Data (accounts, orders) is stored locally in server\data.json on
   whichever PC is running the server - it is not shared or synced
   between different colleagues' copies of the project.
+
+
+SINGLE-FILE VERSION (no install, no server)
+--------------------------------------------
+instarx-standalone.html is the same InstaRX website AND its Flask backend in one file.
+Open it in any modern browser (Chrome, Edge, Firefox) while online and it runs the real
+server code inside the browser (Python via Pyodide). The first load takes 5 to 15 seconds.
+  - Accounts, orders and prescription chats are saved in that browser only.
+  - It needs internet for the Python runtime, maps and address search.
+  - Published on GitHub Pages it works as a link anyone can open.
+  - After changing anything in static\ or server\, rebuild it with:
+        python tools\build_standalone.py
