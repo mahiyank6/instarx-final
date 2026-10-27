@@ -4,7 +4,9 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --chdir server app:app --bind 0.0.0.0:$PORT
+    startCommand: python server/seed.py && gunicorn --chdir server app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
